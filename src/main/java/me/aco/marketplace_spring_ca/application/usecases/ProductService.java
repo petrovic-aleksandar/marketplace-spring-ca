@@ -7,8 +7,8 @@ import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
 import me.aco.marketplace_spring_ca.domain.entities.Product;
 import me.aco.marketplace_spring_ca.domain.entities.User;
-import me.aco.marketplace_spring_ca.domain.repositories.ProductRepository;
-import me.aco.marketplace_spring_ca.domain.repositories.UserRepository;
+import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaProductRepository;
+import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
 @Transactional
 public class ProductService {
 
-    private final ProductRepository productRepository;
-    private final UserRepository userRepository;
+    private final JpaProductRepository productRepository;
+    private final JpaUserRepository userRepository;
 
-    public ProductService(ProductRepository productRepository, UserRepository userRepository) {
+    public ProductService(JpaProductRepository productRepository, JpaUserRepository userRepository) {
         this.productRepository = productRepository;
         this.userRepository = userRepository;
     }
@@ -93,7 +93,7 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public List<ProductResponse> searchProducts(String name) {
-        return productRepository.findByNameContaining(name).stream()
+        return productRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

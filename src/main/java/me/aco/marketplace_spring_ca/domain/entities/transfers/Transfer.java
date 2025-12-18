@@ -1,8 +1,6 @@
 package me.aco.marketplace_spring_ca.domain.entities.transfers;
 
 import jakarta.persistence.*;
-import me.aco.marketplace_spring_ca.domain.entities.Item;
-import me.aco.marketplace_spring_ca.domain.entities.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
