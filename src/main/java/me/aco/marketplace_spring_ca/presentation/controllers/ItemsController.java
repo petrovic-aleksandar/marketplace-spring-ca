@@ -22,7 +22,7 @@ import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository
 import me.aco.marketplace_spring_ca.application.usecases.ItemService;
 
 @RestController
-@RequestMapping("/api/items")
+@RequestMapping("/api/Item")
 public class ItemsController {
     
     private final JpaItemRepository itemRepository;
@@ -45,7 +45,7 @@ public class ItemsController {
         return ResponseEntity.ok(new ItemResp(item));
     }
 
-    @GetMapping("/seller/{sellerId}")
+    @GetMapping("/bySellerId/{sellerId}")
     public ResponseEntity<List<ItemResp>> getItemsBySellerId(@PathVariable Long sellerId) {
         var seller = userRepository.findById(sellerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
@@ -54,7 +54,7 @@ public class ItemsController {
         return ResponseEntity.ok(resp);
     }
 
-    @GetMapping("/type/{typeId}")
+    @GetMapping("/byTypeId/{typeId}")
     public ResponseEntity<List<ItemResp>> getItemsByTypeId(@PathVariable Long typeId) {
         var type = itemTypeRepository.findById(typeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item type not found"));
@@ -85,7 +85,7 @@ public class ItemsController {
         return ResponseEntity.ok(updatedItem);
     }
 
-    @PostMapping("/deactivate/{id}")
+    @PostMapping("/Deactivate/{id}")
     public ResponseEntity<ItemResp> deactivateItem(@PathVariable Long id) {
         var item = itemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
@@ -94,7 +94,7 @@ public class ItemsController {
         return ResponseEntity.ok(new ItemResp(updatedItem));
     }
 
-    @PostMapping("/activate/{id}")
+    @PostMapping("/Activate/{id}")
     public ResponseEntity<ItemResp> activateItem(@PathVariable Long id) {
         var item = itemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
@@ -103,7 +103,7 @@ public class ItemsController {
         return ResponseEntity.ok(new ItemResp(updatedItem));
     }
 
-    @PostMapping("/delete/{id}")
+    @PostMapping("/Delete/{id}")
     public ResponseEntity<ItemResp> deleteItem(@PathVariable Long id) {
         var item = itemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
@@ -112,7 +112,7 @@ public class ItemsController {
         return ResponseEntity.ok(new ItemResp(updatedItem));
     }
 
-    @GetMapping("/types")
+    @GetMapping("/Types")
     public ResponseEntity<List<ItemType>> getItemTypes() {
         var types = itemTypeRepository.findAll();
         return ResponseEntity.ok(types);
