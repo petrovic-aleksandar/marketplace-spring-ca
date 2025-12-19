@@ -1,6 +1,5 @@
 package me.aco.marketplace_spring_ca.application.usecases;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import me.aco.marketplace_spring_ca.application.dto.UserRegReq;
@@ -13,8 +12,11 @@ import me.aco.marketplace_spring_ca.infrastructure.security.SecurityUtil;
 @Service
 public class UserService {
 
-	@Autowired
-	private JpaUserRepository usersRepository;
+	private final JpaUserRepository usersRepository;
+
+	public UserService(JpaUserRepository usersRepository) {
+		this.usersRepository = usersRepository;
+	}
 
 	public User update(UserReq request, User user) {
 		user.setUsername(request.getUsername());
