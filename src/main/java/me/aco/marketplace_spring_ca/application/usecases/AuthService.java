@@ -55,6 +55,3 @@ public class AuthService {
         return UUID.randomUUID().toString().replace("-", "");
     }
 }
-        return RandomStringUtils.secureStrong().nextAlphanumeric(REFRESH_TOKEN_LENGTH);
-    }
-}
