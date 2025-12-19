@@ -48,7 +48,7 @@ public class UsersController {
 
     @PostMapping
     public ResponseEntity<UserResp> createUser(@RequestBody UserReq req) {
-        var existingUser = userRepository.findByEmail(req.getEmail());
+        var existingUser = userRepository.findSingleByUsername(req.getUsername());
         if (existingUser.isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }

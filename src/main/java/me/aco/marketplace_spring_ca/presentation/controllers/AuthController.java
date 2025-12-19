@@ -1,5 +1,7 @@
 package me.aco.marketplace_spring_ca.presentation.controllers;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,11 +16,12 @@ import me.aco.marketplace_spring_ca.application.dto.UserRegReq;
 import me.aco.marketplace_spring_ca.application.dto.UserResp;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
+import me.aco.marketplace_spring_ca.infrastructure.security.JWTUtil;
 import me.aco.marketplace_spring_ca.application.usecases.AuthService;
 import me.aco.marketplace_spring_ca.application.usecases.UserService;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/Auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -36,25 +39,28 @@ public class AuthController {
         return "pong";
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<TokenResp> login(@RequestBody LoginReq req) {
-        User user = authService.authenticate(req);
-        // Note: JWT token generation needs to be implemented
-        TokenResp resp = new TokenResp(
-                "access-token-" + user.getId(), // Placeholder
-                authService.createAndSaveRefreshToken(user));
-        return ResponseEntity.ok(resp);
+    @PostMapping(value = "/login")
+    public CompletableFuture<ResponseEntity<TokenResp>> login(@RequestBody LoginReq req) {
+        return CompletableFuture.supplyAsync(() -> {
+            User user = authService.authenticate(req);
+            TokenResp resp = new TokenResp(
+                    JWTUtil.createToken(user),
+                    authService.createAndSaveRefreshToken(user));
+            return ResponseEntity.ok(resp);
+        });
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<UserResp> register(@RequestBody UserRegReq req) {
-        var existingUser = userRepository.findByEmail(req.getEmail());
-        if (existingUser.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-        
-        User newUser = userService.toUser(req);
-        User addedUser = userRepository.save(newUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new UserResp(addedUser));
+    @PostMapping(value = "/register")
+    public CompletableFuture<ResponseEntity<UserResp>> register(@RequestBody UserRegReq req) {
+
+        return CompletableFuture.supplyAsync(() -> userRepository.findSingleByUsername(req.getUsername())
+                .map(existingUser -> ResponseEntity.badRequest().<UserResp>build())
+                .orElseGet(() -> {
+                    User newUser = userService.toUser(req);
+                    if (newUser == null)
+                        return ResponseEntity.internalServerError().<UserResp>build();
+                    User addedUser = userRepository.save(newUser);
+                    return ResponseEntity.ok(new UserResp(addedUser));
+                }));
     }
 }

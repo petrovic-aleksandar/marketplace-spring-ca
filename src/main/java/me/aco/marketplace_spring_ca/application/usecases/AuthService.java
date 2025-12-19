@@ -11,6 +11,7 @@ import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
+import me.aco.marketplace_spring_ca.infrastructure.security.SecurityUtil;
 
 @Service
 @Transactional
@@ -25,7 +26,7 @@ public class AuthService {
     }
 
 	public User authenticate(LoginReq loginRequest) {
-        User user = userRepository.findByEmail(loginRequest.getUsername())
+        User user = userRepository.findSingleByUsername(loginRequest.getUsername())
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!validatePassword(loginRequest, user))
@@ -35,8 +36,7 @@ public class AuthService {
     }
 
     public boolean validatePassword(LoginReq loginRequest, User user) {
-        // Simple password comparison - in production, use BCrypt or similar
-        return loginRequest.getPassword().equals(user.getPassword());
+        return SecurityUtil.verifyPassword(loginRequest.getPassword(), user.getPassword());
     }
 
     public String createAndSaveRefreshToken(User user) {
