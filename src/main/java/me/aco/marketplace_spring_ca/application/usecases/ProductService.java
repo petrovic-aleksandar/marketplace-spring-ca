@@ -31,8 +31,8 @@ public class ProductService {
         User seller = userRepository.findById(request.getSellerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
 
-        if (!seller.isSeller()) {
-            throw new BusinessException("User is not authorized to sell products");
+        if (!seller.isActive()) {
+            throw new BusinessException("User is not active");
         }
 
         Product product = new Product();
@@ -127,7 +127,7 @@ public class ProductService {
         response.setPrice(product.getPrice());
         response.setStockQuantity(product.getStockQuantity());
         response.setSellerId(product.getSeller().getId());
-        response.setSellerName(product.getSeller().getFullName());
+        response.setSellerName(product.getSeller().getName());
         response.setCreatedAt(product.getCreatedAt());
         response.setUpdatedAt(product.getUpdatedAt());
         return response;
