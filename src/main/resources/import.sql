@@ -31,3 +31,8 @@ INSERT INTO images (id, path, item_id, front, created_at) VALUES (5, 'audi_q5.jp
 INSERT INTO images (id, path, item_id, front, created_at) VALUES (6, 'audi_tt.jpg', 4, true, CURRENT_TIMESTAMP);
 INSERT INTO images (id, path, item_id, front, created_at) VALUES (7, 'lotuselise.jpg', 5, true, CURRENT_TIMESTAMP);
 
+-- Reset auto-increment sequences to avoid conflicts with manually inserted IDs
+ALTER TABLE users ALTER COLUMN id RESTART WITH 4;
+ALTER TABLE item_types ALTER COLUMN id RESTART WITH 11;
+ALTER TABLE items ALTER COLUMN id RESTART WITH 6;
+ALTER TABLE images ALTER COLUMN id RESTART WITH 8;

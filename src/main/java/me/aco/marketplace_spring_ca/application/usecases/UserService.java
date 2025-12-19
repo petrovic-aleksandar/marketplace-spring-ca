@@ -8,31 +8,30 @@ import me.aco.marketplace_spring_ca.application.dto.UserReq;
 import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
+import me.aco.marketplace_spring_ca.infrastructure.security.SecurityUtil;
 
 @Service
 public class UserService {
 
 	@Autowired
-	private JpaUserRepository userRepository;
+	private JpaUserRepository usersRepository;
 
 	public User update(UserReq request, User user) {
 		user.setUsername(request.getUsername());
 		if (request.isUpdatePassword()) {
-			// Password should be hashed before calling this method
-			user.setPassword(request.getPassword());
+			user.setPassword(SecurityUtil.hashPassword(request.getPassword()));
 		}
 		user.setName(request.getName());
 		user.setEmail(request.getEmail());
 		user.setPhone(request.getPhone());
 		user.setRole(UserRole.valueOf(request.getRole()));
-		return userRepository.save(user);
+		return usersRepository.save(user);
 	}
 
 	public User toUser(UserReq request) {
 		User user = new User();
 		user.setUsername(request.getUsername());
-		// Password should be hashed before calling this method
-		user.setPassword(request.getPassword());
+		user.setPassword(SecurityUtil.hashPassword(request.getPassword()));
 		user.setName(request.getName());
 		user.setEmail(request.getEmail());
 		user.setPhone(request.getPhone());
@@ -44,8 +43,7 @@ public class UserService {
 	public User toUser(UserRegReq request) {
 		User user = new User();
 		user.setUsername(request.getUsername());
-		// Password should be hashed before calling this method
-		user.setPassword(request.getPassword());
+		user.setPassword(SecurityUtil.hashPassword(request.getPassword()));
 		user.setName(request.getName());
 		user.setEmail(request.getEmail());
 		user.setPhone(request.getPhone());
