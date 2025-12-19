@@ -47,7 +47,14 @@
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 	</dependency>
-	<dependency>
+	<!-- PostgreSQL Driver -->
+	<dependency>		
+		<groupId>org.postgresql</groupId>
+		<artifactId>postgresql</artifactId>
+		<scope>runtime</scope>
+	</dependency>
+	<!-- OpenAPI / Swagger -->
+	<dependency>		
 		<groupId>org.springdoc</groupId>
 		<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 		<version>3.0.0</version>
