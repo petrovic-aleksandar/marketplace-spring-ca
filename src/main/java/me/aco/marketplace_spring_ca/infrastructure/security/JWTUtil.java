@@ -24,7 +24,7 @@ public class JWTUtil {
 		        .withExpiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
 		        .withClaim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name", u.getUsername())
 		        .withClaim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier", u.getId())
-		        .withClaim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", u.getRole().toString())
+		        .withClaim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", u.getRole().getDisplayName())
 		        .sign(algorithm);
 		    return token;
 		} catch (JWTCreationException e){
