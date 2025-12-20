@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import me.aco.marketplace_spring_ca.application.dto.UserReq;
-import me.aco.marketplace_spring_ca.application.dto.UserResp;
+import me.aco.marketplace_spring_ca.application.dto.UserDto;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
 import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
@@ -33,21 +33,21 @@ public class UsersController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResp> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return ResponseEntity.ok(new UserResp(user));
+        return ResponseEntity.ok(new UserDto(user));
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResp>> getAllUsers() {
+    public ResponseEntity<List<UserDto>> getAllUsers() {
         var users = userRepository.findAll();
-        var resp = users.stream().map(UserResp::new).collect(Collectors.toList());
+        var resp = users.stream().map(UserDto::new).collect(Collectors.toList());
         return ResponseEntity.ok(resp);
     }
 
     @PostMapping
-    public ResponseEntity<UserResp> createUser(@RequestBody UserReq req) {
+    public ResponseEntity<UserDto> createUser(@RequestBody UserReq req) {
         var existingUser = userRepository.findSingleByUsername(req.getUsername());
         if (existingUser.isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -55,36 +55,36 @@ public class UsersController {
 
         var newUser = userService.toUser(req);
         var addedUser = userRepository.save(newUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new UserResp(addedUser));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new UserDto(addedUser));
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<UserResp> updateUser(@PathVariable Long id, @RequestBody UserReq req) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserReq req) {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         var updatedUser = userService.update(req, user);
-        return ResponseEntity.ok(new UserResp(updatedUser));
+        return ResponseEntity.ok(new UserDto(updatedUser));
     }
 
     @PostMapping("/deactivate/{id}")
-    public ResponseEntity<UserResp> deactivateUser(@PathVariable Long id) {
+    public ResponseEntity<UserDto> deactivateUser(@PathVariable Long id) {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.deactivate();
         var updatedUser = userRepository.save(user);
-        return ResponseEntity.ok(new UserResp(updatedUser));
+        return ResponseEntity.ok(new UserDto(updatedUser));
     }
 
     @PostMapping("/activate/{id}")
-    public ResponseEntity<UserResp> activateUser(@PathVariable Long id) {
+    public ResponseEntity<UserDto> activateUser(@PathVariable Long id) {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.activate();
         var updatedUser = userRepository.save(user);
-        return ResponseEntity.ok(new UserResp(updatedUser));
+        return ResponseEntity.ok(new UserDto(updatedUser));
     }
 
     @GetMapping("/roles")

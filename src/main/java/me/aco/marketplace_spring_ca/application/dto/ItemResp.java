@@ -18,7 +18,7 @@ public class ItemResp {
 	private boolean active;
 	private boolean deleted;
 	private String createdAt;
-	private UserResp seller;
+	private UserDto seller;
 	private Image frontImage;
 	
 	public ItemResp(Item item) {
@@ -30,7 +30,7 @@ public class ItemResp {
 		this.type = item.getType();
 		this.active = item.isActive();
 		this.createdAt = item.getCreatedAt() != null ? item.getCreatedAt().format(ISO_INSTANT_NO_MILLIS) : "";
-		this.seller = new UserResp(item.getSeller());	
+		this.seller = new UserDto(item.getSeller());	
 	}
 
 	public long getId() {
@@ -97,11 +97,11 @@ public class ItemResp {
 		this.createdAt = createdAt;
 	}
 
-	public UserResp getSeller() {
+	public UserDto getSeller() {
 		return seller;
 	}
 
-	public void setSeller(UserResp seller) {
+	public void setSeller(UserDto seller) {
 		this.seller = seller;
 	}
 

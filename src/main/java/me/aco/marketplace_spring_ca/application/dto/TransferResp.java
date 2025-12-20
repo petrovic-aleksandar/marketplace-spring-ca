@@ -13,8 +13,8 @@ public class TransferResp {
 	private double amount;
 	private String time;
 	private String type;
-	private UserResp buyer;
-	private UserResp seller;
+	private UserDto buyer;
+	private UserDto seller;
 	private ItemResp item;
 	
 	public TransferResp(Transfer transfer) {
@@ -24,8 +24,8 @@ public class TransferResp {
 		type = transfer.getClass().getSimpleName().replace("Transfer", "").toUpperCase();
 		if (transfer instanceof PurchaseTransfer) {
 			PurchaseTransfer pt = (PurchaseTransfer) transfer;
-			buyer = new UserResp(pt.getBuyer());
-			seller = new UserResp(pt.getSeller());
+			buyer = new UserDto(pt.getBuyer());
+			seller = new UserDto(pt.getSeller());
 			item = new ItemResp(pt.getItem());
 		}
 	}
@@ -62,19 +62,19 @@ public class TransferResp {
 		this.type = type;
 	}
 
-	public UserResp getBuyer() {
+	public UserDto getBuyer() {
 		return buyer;
 	}
 
-	public void setBuyer(UserResp buyer) {
+	public void setBuyer(UserDto buyer) {
 		this.buyer = buyer;
 	}
 
-	public UserResp getSeller() {
+	public UserDto getSeller() {
 		return seller;
 	}
 
-	public void setSeller(UserResp seller) {
+	public void setSeller(UserDto seller) {
 		this.seller = seller;
 	}
 
