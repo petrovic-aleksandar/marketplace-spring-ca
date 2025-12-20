@@ -1,11 +1,11 @@
 package me.aco.marketplace_spring_ca.application.dto;
 
-public class TokenResp {
+public class TokenDto {
 	
 	private String accessToken;
 	private String refreshToken;
 
-	public TokenResp(String accessToken, String refreshToken) {
+	public TokenDto(String accessToken, String refreshToken) {
 		super();
 		this.accessToken = accessToken;
 		this.refreshToken = refreshToken;

@@ -2,7 +2,7 @@ package me.aco.marketplace_spring_ca.application.dto;
 
 import me.aco.marketplace_spring_ca.domain.entities.User;
 
-public class UserResp {
+public class UserDto {
 	
 	private long id;
 	private String username;
@@ -13,7 +13,7 @@ public class UserResp {
 	private String role;
 	private boolean active;
 	
-	public UserResp(User user) {
+	public UserDto(User user) {
 		super();
 		this.id = user.getId();
 		this.username = user.getUsername();

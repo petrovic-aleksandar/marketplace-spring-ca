@@ -10,28 +10,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import me.aco.marketplace_spring_ca.application.dto.LoginReq;
-import me.aco.marketplace_spring_ca.application.dto.TokenResp;
-import me.aco.marketplace_spring_ca.application.dto.UserRegReq;
-import me.aco.marketplace_spring_ca.application.dto.UserResp;
-import me.aco.marketplace_spring_ca.domain.entities.User;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
-import me.aco.marketplace_spring_ca.infrastructure.security.JWTUtil;
-import me.aco.marketplace_spring_ca.application.usecases.AuthService;
-import me.aco.marketplace_spring_ca.application.usecases.UserService;
+import me.aco.marketplace_spring_ca.application.dto.TokenDto;
+import me.aco.marketplace_spring_ca.application.dto.UserDto;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommandHandler;
 
 @RestController
 @RequestMapping("/api/Auth")
 public class AuthController {
 
-    private final AuthService authService;
-    private final JpaUserRepository userRepository;
-    private final UserService userService;
+    private final LoginCommandHandler loginCommandHandler;
+    private final RegisterCommandHandler registerCommandHandler;
 
-    public AuthController(AuthService authService, JpaUserRepository userRepository, UserService userService) {
-        this.authService = authService;
-        this.userRepository = userRepository;
-        this.userService = userService;
+    public AuthController(LoginCommandHandler loginCommandHandler, RegisterCommandHandler registerCommandHandler) {
+        this.loginCommandHandler = loginCommandHandler;
+        this.registerCommandHandler = registerCommandHandler;
     }
 
     @GetMapping("/ping")
@@ -40,27 +35,16 @@ public class AuthController {
     }
 
     @PostMapping(value = "/login")
-    public CompletableFuture<ResponseEntity<TokenResp>> login(@RequestBody LoginReq req) {
-        return CompletableFuture.supplyAsync(() -> {
-            User user = authService.authenticate(req);
-            TokenResp resp = new TokenResp(
-                    JWTUtil.createToken(user),
-                    authService.createAndSaveRefreshToken(user));
-            return ResponseEntity.ok(resp);
-        });
+    public CompletableFuture<ResponseEntity<TokenDto>> login(@RequestBody LoginCommand command) {
+        return loginCommandHandler.handle(command)
+                .thenApply(tokenDto -> ResponseEntity.ok(tokenDto))
+                .exceptionally(ex -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 
     @PostMapping(value = "/register")
-    public CompletableFuture<ResponseEntity<UserResp>> register(@RequestBody UserRegReq req) {
-
-        return CompletableFuture.supplyAsync(() -> userRepository.findSingleByUsername(req.getUsername())
-                .map(existingUser -> ResponseEntity.badRequest().<UserResp>build())
-                .orElseGet(() -> {
-                    User newUser = userService.toUser(req);
-                    if (newUser == null)
-                        return ResponseEntity.internalServerError().<UserResp>build();
-                    User addedUser = userRepository.save(newUser);
-                    return ResponseEntity.ok(new UserResp(addedUser));
-                }));
+    public CompletableFuture<ResponseEntity<UserDto>> register(@RequestBody RegisterCommand command) {
+        return registerCommandHandler.handle(command)
+                .thenApply(userResp -> ResponseEntity.ok(userResp))
+                .exceptionally(ex -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
     }
 }
