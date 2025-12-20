@@ -16,6 +16,10 @@ import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginComma
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RefreshTokenCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RefreshTokenCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommandHandler;
 
 @RestController
 @RequestMapping("/api/Auth")
@@ -23,10 +27,15 @@ public class AuthController {
 
     private final LoginCommandHandler loginCommandHandler;
     private final RegisterCommandHandler registerCommandHandler;
+    private final RefreshTokenCommandHandler refreshTokenCommandHandler;
+    private final RevokeTokenCommandHandler revokeTokenCommandHandler;
 
-    public AuthController(LoginCommandHandler loginCommandHandler, RegisterCommandHandler registerCommandHandler) {
+    public AuthController(LoginCommandHandler loginCommandHandler, RegisterCommandHandler registerCommandHandler,
+            RefreshTokenCommandHandler refreshTokenCommandHandler, RevokeTokenCommandHandler revokeTokenCommandHandler) {
         this.loginCommandHandler = loginCommandHandler;
         this.registerCommandHandler = registerCommandHandler;
+        this.refreshTokenCommandHandler = refreshTokenCommandHandler;
+        this.revokeTokenCommandHandler = revokeTokenCommandHandler;
     }
 
     @GetMapping("/ping")
@@ -46,5 +55,19 @@ public class AuthController {
         return registerCommandHandler.handle(command)
                 .thenApply(userResp -> ResponseEntity.ok(userResp))
                 .exceptionally(ex -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+    }
+
+    @PostMapping(value = "/refresh-token")
+    public CompletableFuture<ResponseEntity<Long>> refreshToken(@RequestBody RefreshTokenCommand command) {
+        return refreshTokenCommandHandler.handle(command)
+                .thenApply(userId -> ResponseEntity.ok(userId))
+                .exceptionally(ex -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+
+    @PostMapping(value = "/revoke-token")
+    public CompletableFuture<ResponseEntity<Long>> revokeToken(@RequestBody RevokeTokenCommand command) {
+        return revokeTokenCommandHandler.handle(command)
+                .thenApply(userId -> ResponseEntity.ok(userId))
+                .exceptionally(ex -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 }
