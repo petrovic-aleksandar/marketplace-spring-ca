@@ -18,25 +18,25 @@ public class UserService {
 	}
 
 	public User update(UserReq request, User user) {
-		user.setUsername(request.getUsername());
-		if (request.isUpdatePassword()) {
-			user.setPassword(new PasswordHasherImpl().hashPassword(request.getPassword()));
+		user.setUsername(request.username());
+		if (request.updatePassword()) {
+			user.setPassword(new PasswordHasherImpl().hashPassword(request.password()));
 		}
-		user.setName(request.getName());
-		user.setEmail(request.getEmail());
-		user.setPhone(request.getPhone());
-		user.setRole(UserRole.valueOf(request.getRole()));
+		user.setName(request.name());
+		user.setEmail(request.email());
+		user.setPhone(request.phone());
+		user.setRole(UserRole.valueOf(request.role()));
 		return usersRepository.save(user);
 	}
 
 	public User toUser(UserReq request) {
 		User user = new User();
-		user.setUsername(request.getUsername());
-		user.setPassword(new PasswordHasherImpl().hashPassword(request.getPassword()));
-		user.setName(request.getName());
-		user.setEmail(request.getEmail());
-		user.setPhone(request.getPhone());
-		user.setRole(UserRole.valueOf(request.getRole()));
+		user.setUsername(request.username());
+		user.setPassword(new PasswordHasherImpl().hashPassword(request.password()));
+		user.setName(request.name());
+		user.setEmail(request.email());
+		user.setPhone(request.phone());
+		user.setRole(UserRole.valueOf(request.role()));
 		user.setActive(true);
 		return user;
 	}

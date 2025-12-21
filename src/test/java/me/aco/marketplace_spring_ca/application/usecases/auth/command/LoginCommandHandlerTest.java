@@ -91,8 +91,8 @@ class LoginCommandHandlerTest {
 
         // Assert
         assertNotNull(tokenDto, "TokenDto should not be null");
-        assertEquals(expectedToken, tokenDto.getAccessToken(), "Access token should match");
-        assertEquals(expectedRefreshToken, tokenDto.getRefreshToken(), "Refresh token should match");
+        assertEquals(expectedToken, tokenDto.accessToken(), "Access token should match");
+        assertEquals(expectedRefreshToken, tokenDto.refreshToken(), "Refresh token should match");
         verify(userRepository, times(1)).findSingleByUsername("testuser");
         verify(passwordHasher, times(1)).verifyPassword("password123", testUser.getPassword());
         verify(tokenService, times(1)).generateToken(testUser);
