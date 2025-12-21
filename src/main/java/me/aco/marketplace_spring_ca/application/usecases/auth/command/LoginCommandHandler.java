@@ -18,7 +18,7 @@ import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository
 @Service
 public class LoginCommandHandler {
 
-    private static final int REFRESH_TOKEN_VALIDITY_DAYS = 7;
+    private static final int REFRESH_TOKEN_VALIDITY_DAYS = 1;
 
     private final JpaUserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
@@ -42,7 +42,7 @@ public class LoginCommandHandler {
         });
     }
 
-    public User authenticate(LoginCommand command) {
+    private User authenticate(LoginCommand command) {
         User user = userRepository.findSingleByUsername(command.username())
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -52,16 +52,15 @@ public class LoginCommandHandler {
         return user;
     }
 
-    public boolean validatePassword(LoginCommand command, User user) {
+    private boolean validatePassword(LoginCommand command, User user) {
         return passwordHasher.verifyPassword(command.password(), user.getPassword());
     }
 
-    public String createAndSaveRefreshToken(User user) {
-        String refreshToken = refreshTokenService.generateRefreshToken();
-        user.setRefreshToken(refreshToken);
+    private String createAndSaveRefreshToken(User user) {
+        user.setRefreshToken(refreshTokenService.generateRefreshToken());
         user.setRefreshTokenExpiry(LocalDateTime.now().plus(REFRESH_TOKEN_VALIDITY_DAYS, ChronoUnit.DAYS));
         userRepository.save(user);
-        return refreshToken;
+        return user.getRefreshToken();
     }
     
 }

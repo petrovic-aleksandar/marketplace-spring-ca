@@ -21,7 +21,7 @@ public class RefreshTokenCommandHandler {
     }
 
     public CompletableFuture<Long> handle(RefreshTokenCommand command) {
-        // if token is valid but expired, generate new access token
+        // if access token is valid but expired, generate new refresh token
         return CompletableFuture.supplyAsync(() -> {
             var user = userRepository.findById(command.userId())
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
