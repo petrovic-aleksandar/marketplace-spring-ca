@@ -3,6 +3,8 @@ package me.aco.marketplace_spring_ca.infrastructure.security;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import org.springframework.stereotype.Service;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
@@ -13,6 +15,7 @@ import com.auth0.jwt.interfaces.JWTVerifier;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.domain.intefrace.TokenService;
 
+@Service
 public class JwtTokenService implements TokenService {
 	
 	private static final Algorithm algorithm = Algorithm.HMAC512("a85e024c34cbc78f559627e9d36cece0bb2bf1df7be8ca7eb606405e410fda4fbcac05cb8fa79bcabf21f8a9f6a48d0cb16eb95b52f44709e6f40b5aeb604909");
