@@ -6,6 +6,7 @@ import me.aco.marketplace_spring_ca.domain.entities.User;
 import java.math.BigDecimal;
 
 @Entity
+@Table(name = "payment_transfers")
 @DiscriminatorValue("PAYMENT")
 public class PaymentTransfer extends Transfer {
 

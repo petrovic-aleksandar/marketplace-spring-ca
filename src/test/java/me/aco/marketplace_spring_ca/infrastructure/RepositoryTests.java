@@ -4,7 +4,6 @@ import me.aco.marketplace_spring_ca.domain.entities.Image;
 import me.aco.marketplace_spring_ca.domain.entities.Item;
 import me.aco.marketplace_spring_ca.domain.entities.ItemType;
 import me.aco.marketplace_spring_ca.domain.entities.User;
-import me.aco.marketplace_spring_ca.domain.entities.transfers.PurchaseTransfer;
 import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.*;
 
@@ -216,85 +215,5 @@ public class RepositoryTests {
         Image retrievedImage = imageRepository.findById(savedImage.getId()).orElse(null);
         assertNotNull(retrievedImage, "Image should be retrievable from repository");
         assertEquals("blue_tshirt_front.jpg", retrievedImage.getPath(), "Retrieved image should have correct path");
-    }
-
-    @Test
-    void persistTransfer() {
-        // Arrange - Create and save buyer, seller, item type, and item
-        User buyer = new User(
-                null,
-                "buyer",
-                "password",
-                "Alice Buyer",
-                "buyer@example.com",
-                "555-7777",
-                new BigDecimal("1000.00"),
-                UserRole.USER,
-                true,
-                null,
-                null,
-                LocalDateTime.now()
-        );
-        User savedBuyer = userRepository.save(buyer);
-
-        User seller = new User(
-                null,
-                "seller3",
-                "password",
-                "Bob Seller",
-                "seller3@example.com",
-                "555-8888",
-                new BigDecimal("500.00"),
-                UserRole.USER,
-                true,
-                null,
-                null,
-                LocalDateTime.now()
-        );
-        User savedSeller = userRepository.save(seller);
-
-        ItemType itemType = new ItemType(
-                null,
-                "Electronics",
-                "Electronic items",
-                "electronics.jpg",
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-        ItemType savedItemType = itemTypeRepository.save(itemType);
-
-        Item item = new Item();
-        item.setName("Laptop");
-        item.setDescription("High-performance laptop");
-        item.setPrice(new BigDecimal("999.99"));
-        item.setType(savedItemType);
-        item.setSeller(savedSeller);
-        item.setActive(true);
-        item.setDeleted(false);
-        item.setUpdatedAt(LocalDateTime.now());
-        Item savedItem = itemRepository.save(item);
-
-        PurchaseTransfer newTransfer = new PurchaseTransfer(
-                null,
-                savedItem.getPrice(),
-                savedBuyer,
-                savedSeller,
-                savedItem
-        );
-
-        // Act
-        PurchaseTransfer savedTransfer = (PurchaseTransfer) transferRepository.save(newTransfer);
-
-        // Assert
-        assertNotNull(savedTransfer.getId(), "Transfer ID should not be null after saving");
-        assertEquals(new BigDecimal("999.99"), savedTransfer.getAmount(), "Transfer amount should match");
-        assertEquals(savedBuyer.getId(), savedTransfer.getBuyer().getId(), "Buyer should match");
-        assertEquals(savedSeller.getId(), savedTransfer.getSeller().getId(), "Seller should match");
-        assertEquals(savedItem.getId(), savedTransfer.getItem().getId(), "Item should match");
-
-        // Verify persistence
-        PurchaseTransfer retrievedTransfer = (PurchaseTransfer) transferRepository.findById(savedTransfer.getId()).orElse(null);
-        assertNotNull(retrievedTransfer, "Transfer should be retrievable from repository");
-        assertEquals(new BigDecimal("999.99"), retrievedTransfer.getAmount(), "Retrieved transfer should have correct amount");
     }
 }

@@ -8,7 +8,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "transfers")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "transfer_type", discriminatorType = DiscriminatorType.STRING)
 public abstract class Transfer {
 
