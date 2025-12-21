@@ -76,6 +76,12 @@
     		<artifactId>spring-security-crypto</artifactId>
     		<version>6.5.6</version>
 		</dependency>
+		<!-- for @DataJpaTest -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-data-jpa-test</artifactId>
+    <version>4.0.1</version>
+</dependency>
 	</dependencies>
 
 	<build>
