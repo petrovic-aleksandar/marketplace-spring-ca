@@ -17,13 +17,15 @@ public class RevokeTokenCommandHandler {
     }
 
     public CompletableFuture<Long> handle(RevokeTokenCommand command) {
-        return CompletableFuture.supplyAsync(() -> {
-            var user = userRepository.findById(command.userId())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
-            
+        return CompletableFuture.supplyAsync(() -> 
+            userRepository.findById(command.userId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"))
+        ).thenCompose(user -> {
             user.setRefreshToken(null);
-            User savedUser = userRepository.save(user);
-            return savedUser.getId();
+            return CompletableFuture.supplyAsync(() -> {
+                User savedUser = userRepository.save(user);
+                return savedUser.getId();
+            });
         });
     }
     

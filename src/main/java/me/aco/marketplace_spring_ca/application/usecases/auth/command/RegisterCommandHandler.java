@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import me.aco.marketplace_spring_ca.application.dto.UserDto;
 import me.aco.marketplace_spring_ca.domain.entities.User;
-import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 import me.aco.marketplace_spring_ca.domain.intefrace.PasswordHasher;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
