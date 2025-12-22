@@ -14,7 +14,6 @@ import me.aco.marketplace_spring_ca.domain.entities.transfers.PurchaseTransfer;
 import me.aco.marketplace_spring_ca.domain.entities.transfers.WithdrawalTransfer;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaTransferRepository;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository;
 
 @Service
 @Transactional
@@ -24,8 +23,6 @@ public class TransferService {
     private JpaTransferRepository transferRepository;
     @Autowired
     private JpaUserRepository userRepository;
-    @Autowired
-    private JpaItemRepository itemRepository;
 
     public TransferResp addPayment(TransferReq request, User user) {
         PaymentTransfer transfer = new PaymentTransfer();

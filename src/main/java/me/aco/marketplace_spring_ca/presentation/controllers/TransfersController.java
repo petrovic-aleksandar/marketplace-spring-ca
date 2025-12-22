@@ -40,8 +40,7 @@ public class TransfersController {
 
     @GetMapping("/user/{id}")
     public ResponseEntity<List<TransferResp>> getByUserId(@PathVariable Long id) {
-        var user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         
         List<TransferResp> transfers = new ArrayList<>();
         transfers.addAll(transferRepository.findByBuyerId(id).stream()

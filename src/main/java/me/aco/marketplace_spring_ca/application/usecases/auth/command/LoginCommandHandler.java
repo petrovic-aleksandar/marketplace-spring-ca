@@ -33,12 +33,16 @@ public class LoginCommandHandler {
     }
 
     public CompletableFuture<TokenDto> handle(LoginCommand command) {
+        User user = authenticate(command);
+        String accessToken = tokenService.generateToken(user);
+        String refreshToken = refreshTokenService.generateRefreshToken();
+        
+        user.setRefreshToken(refreshToken);
+        user.setRefreshTokenExpiry(LocalDateTime.now().plus(REFRESH_TOKEN_VALIDITY_DAYS, ChronoUnit.DAYS));
+        
         return CompletableFuture.supplyAsync(() -> {
-            User user = authenticate(command);
-            TokenDto resp = new TokenDto(
-                    tokenService.generateToken(user),
-                    createAndSaveRefreshToken(user));
-            return resp;
+            userRepository.save(user);
+            return new TokenDto(accessToken, refreshToken);
         });
     }
 
@@ -54,13 +58,6 @@ public class LoginCommandHandler {
 
     private boolean validatePassword(LoginCommand command, User user) {
         return passwordHasher.verifyPassword(command.password(), user.getPassword());
-    }
-
-    private String createAndSaveRefreshToken(User user) {
-        user.setRefreshToken(refreshTokenService.generateRefreshToken());
-        user.setRefreshTokenExpiry(LocalDateTime.now().plus(REFRESH_TOKEN_VALIDITY_DAYS, ChronoUnit.DAYS));
-        userRepository.save(user);
-        return user.getRefreshToken();
     }
     
 }

@@ -82,6 +82,12 @@
     <artifactId>spring-boot-data-jpa-test</artifactId>
     <version>4.0.1</version>
 </dependency>
+<!-- for @WebMvcTest -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-webmvc-test</artifactId>
+    <version>4.0.1</version>
+</dependency>
 	</dependencies>
 
 	<build>
