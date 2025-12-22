@@ -8,4 +8,6 @@ public interface TokenService {
 
     public boolean validateToken(String token);
     
+    public boolean validateTokenIgnoringExpiration(String token);
+    
 }

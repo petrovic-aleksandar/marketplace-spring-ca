@@ -9,7 +9,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
 
 import me.aco.marketplace_spring_ca.domain.entities.User;
@@ -38,21 +37,32 @@ public class JwtTokenService implements TokenService {
 	}
 	
 	public boolean validateToken(String token) {
-		DecodedJWT decodedJWT;
 		try {
 		    JWTVerifier verifier = JWT.require(algorithm)
 		    	.withIssuer("MarketplaceBackendApp")
 			    .withAudience("MarketplaceBackendApp")
 		        .build();
-		    decodedJWT = verifier.verify(token);
+		    verifier.verify(token); // This automatically checks expiration
+		    return true;
+		} catch (JWTVerificationException exception){
+		    // Invalid signature/claims or expired
+			return false;
+		}
+	}
+	
+	public boolean validateTokenIgnoringExpiration(String token) {
+		try {
+		    JWTVerifier verifier = JWT.require(algorithm)
+		    	.withIssuer("MarketplaceBackendApp")
+			    .withAudience("MarketplaceBackendApp")
+		        .acceptExpiresAt(Long.MAX_VALUE) // Accept any expiration time
+		        .build();
+		    verifier.verify(token);
+		    return true;
 		} catch (JWTVerificationException exception){
 		    // Invalid signature/claims
 			return false;
 		}
-		if (decodedJWT.getExpiresAtAsInstant().isBefore(Instant.now()))
-			return false;
-		else
-			return true;
 	}
     
 }

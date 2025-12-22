@@ -55,9 +55,9 @@ public class AuthController {
     }
 
     @PostMapping(value = "/refresh-token")
-    public CompletableFuture<ResponseEntity<Long>> refreshToken(@RequestBody RefreshTokenCommand command) {
+    public CompletableFuture<ResponseEntity<TokenDto>> refreshToken(@RequestBody RefreshTokenCommand command) {
         return refreshTokenCommandHandler.handle(command)
-                .thenApply(userId -> ResponseEntity.ok(userId));
+                .thenApply(tokenDto -> ResponseEntity.ok(tokenDto));
     }
 
     @PostMapping(value = "/revoke-token")
