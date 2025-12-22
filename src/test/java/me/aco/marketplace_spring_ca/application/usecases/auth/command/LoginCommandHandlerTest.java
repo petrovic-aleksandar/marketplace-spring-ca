@@ -1,8 +1,7 @@
 package me.aco.marketplace_spring_ca.application.usecases.auth.command;
 
 import me.aco.marketplace_spring_ca.application.dto.TokenDto;
-import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
-import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
+import me.aco.marketplace_spring_ca.application.exceptions.AuthenticationException;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 import me.aco.marketplace_spring_ca.domain.intefrace.PasswordHasher;
@@ -117,12 +116,12 @@ class LoginCommandHandlerTest {
             result.get();
         }, "Should throw ExecutionException for wrong password");
 
-        // Verify the cause is BusinessException
+        // Verify the cause is AuthenticationException
         try {
             result.get();
         } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof BusinessException, 
-                    "Cause should be BusinessException");
+            assertTrue(e.getCause() instanceof AuthenticationException, 
+                    "Cause should be AuthenticationException");
             assertEquals("Invalid credentials", e.getCause().getMessage(), 
                     "Error message should be 'Invalid credentials'");
         } catch (InterruptedException e) {
@@ -150,14 +149,14 @@ class LoginCommandHandlerTest {
             result.get();
         }, "Should throw ExecutionException for non-existing user");
 
-        // Verify the cause is ResourceNotFoundException
+        // Verify the cause is AuthenticationException
         try {
             result.get();
         } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof ResourceNotFoundException, 
-                    "Cause should be ResourceNotFoundException");
-            assertEquals("User not found", e.getCause().getMessage(), 
-                    "Error message should be 'User not found'");
+            assertTrue(e.getCause() instanceof AuthenticationException, 
+                    "Cause should be AuthenticationException");
+            assertEquals("Invalid credentials", e.getCause().getMessage(), 
+                    "Error message should be 'Invalid credentials'");
         } catch (InterruptedException e) {
             fail("Should not be interrupted");
         }

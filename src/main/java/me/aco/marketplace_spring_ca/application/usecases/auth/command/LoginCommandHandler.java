@@ -32,31 +32,31 @@ public class LoginCommandHandler {
     }
 
     public CompletableFuture<TokenDto> handle(LoginCommand command) {
-        User user = authenticate(command);
-        String accessToken = tokenService.generateToken(user);
-        String refreshToken = refreshTokenService.generateRefreshToken();
-        
-        user.setRefreshToken(refreshToken);
-        user.setRefreshTokenExpiry(LocalDateTime.now().plus(REFRESH_TOKEN_VALIDITY_DAYS, ChronoUnit.DAYS));
-        
+        return authenticate(command)
+            .thenCompose(user -> {
+                String accessToken = tokenService.generateToken(user);
+                String refreshToken = refreshTokenService.generateRefreshToken();
+                
+                user.setRefreshToken(refreshToken);
+                user.setRefreshTokenExpiry(LocalDateTime.now().plus(REFRESH_TOKEN_VALIDITY_DAYS, ChronoUnit.DAYS));
+                
+                return CompletableFuture.supplyAsync(() -> {
+                    userRepository.save(user);
+                    return new TokenDto(accessToken, refreshToken);
+                });
+            });
+    }
+
+    private CompletableFuture<User> authenticate(LoginCommand command) {
         return CompletableFuture.supplyAsync(() -> {
-            userRepository.save(user);
-            return new TokenDto(accessToken, refreshToken);
+            User user = userRepository.findSingleByUsername(command.username())
+                .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+
+            if (!passwordHasher.verifyPassword(command.password(), user.getPassword()))
+                throw new AuthenticationException("Invalid credentials");
+
+            return user;
         });
-    }
-
-    private User authenticate(LoginCommand command) {
-        User user = userRepository.findSingleByUsername(command.username())
-            .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
-
-        if (!validatePassword(command, user))
-            throw new AuthenticationException("Invalid credentials");
-
-        return user;
-    }
-
-    private boolean validatePassword(LoginCommand command, User user) {
-        return passwordHasher.verifyPassword(command.password(), user.getPassword());
     }
     
 }

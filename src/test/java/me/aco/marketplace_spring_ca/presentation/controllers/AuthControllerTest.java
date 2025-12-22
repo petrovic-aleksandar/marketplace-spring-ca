@@ -102,7 +102,7 @@ class AuthControllerTest {
         LoginCommand loginCommand = new LoginCommand("testuser", "wrongpassword");
         
         CompletableFuture<TokenDto> failedFuture = new CompletableFuture<>();
-        failedFuture.completeExceptionally(new IllegalArgumentException("Invalid credentials"));
+        failedFuture.completeExceptionally(new me.aco.marketplace_spring_ca.application.exceptions.AuthenticationException("Invalid credentials"));
         
         when(loginCommandHandler.handle(any(LoginCommand.class)))
                 .thenReturn(failedFuture);
@@ -214,7 +214,7 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(refreshCommand)))
                 .andExpect(request().asyncStarted())
                 .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -253,6 +253,6 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(revokeCommand)))
                 .andExpect(request().asyncStarted())
                 .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isBadRequest());
     }
 }
