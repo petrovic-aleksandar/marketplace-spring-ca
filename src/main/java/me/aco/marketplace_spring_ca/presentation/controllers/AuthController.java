@@ -2,7 +2,6 @@ package me.aco.marketplace_spring_ca.presentation.controllers;
 
 import java.util.concurrent.CompletableFuture;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
