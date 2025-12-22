@@ -26,22 +26,25 @@ public class RegisterCommandHandler {
             if (userRepository.findSingleByUsername(command.username()).isPresent()) {
                 throw new IllegalArgumentException("Username already exists");
             }
-            User newUser = toUser(command);
-            User addedUser = userRepository.save(newUser);
-            return new UserDto(addedUser);
+            return command;
+        }).thenCompose(cmd -> {
+            User newUser = toUser(cmd);
+            return CompletableFuture.supplyAsync(() -> {
+                User addedUser = userRepository.save(newUser);
+                return new UserDto(addedUser);
+            });
         });
     }
 
-    public User toUser(RegisterCommand command) {
-		User user = new User();
-		user.setUsername(command.username());
-		user.setPassword(passwordHasher.hashPassword(command.password()));
-		user.setName(command.name());
-		user.setEmail(command.email());
-		user.setPhone(command.phone());
-		user.setRole(UserRole.USER);
-		user.setActive(true);
-		return user;
+    private User toUser(RegisterCommand command) {
+		String hashedPassword = passwordHasher.hashPassword(command.password());
+		return new User(
+			command.username(),
+			hashedPassword,
+			command.name(),
+			command.email(),
+			command.phone()
+		);
 	}
     
 }

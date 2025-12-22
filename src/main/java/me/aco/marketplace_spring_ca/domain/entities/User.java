@@ -70,6 +70,18 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
+    // Constructor for new user registration
+    public User(String username, String hashedPassword, String name, String email, String phone) {
+        this.username = username;
+        this.password = hashedPassword;
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.balance = BigDecimal.ZERO;
+        this.role = UserRole.USER;
+        this.active = true;
+    }
+
     public Long getId() {
         return id;
     }

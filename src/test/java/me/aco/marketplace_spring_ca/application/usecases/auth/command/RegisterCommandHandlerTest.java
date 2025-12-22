@@ -76,10 +76,10 @@ class RegisterCommandHandlerTest {
 
         // Assert
         assertNotNull(userDto, "UserDto should not be null");
-        assertEquals("newuser", userDto.getUsername(), "Username should match");
-        assertEquals("New User", userDto.getName(), "Name should match");
-        assertEquals("newuser@example.com", userDto.getEmail(), "Email should match");
-        assertEquals("555-9999", userDto.getPhone(), "Phone should match");
+        assertEquals("newuser", userDto.username(), "Username should match");
+        assertEquals("New User", userDto.name(), "Name should match");
+        assertEquals("newuser@example.com", userDto.email(), "Email should match");
+        assertEquals("555-9999", userDto.phone(), "Phone should match");
 
         // Verify interactions
         verify(userRepository, times(1)).findSingleByUsername("newuser");
