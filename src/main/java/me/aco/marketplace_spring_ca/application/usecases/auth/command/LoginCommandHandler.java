@@ -7,8 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Service;
 
 import me.aco.marketplace_spring_ca.application.dto.TokenDto;
-import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
-import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
+import me.aco.marketplace_spring_ca.application.exceptions.AuthenticationException;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.domain.intefrace.PasswordHasher;
 import me.aco.marketplace_spring_ca.domain.intefrace.RefreshTokenService;
@@ -48,10 +47,10 @@ public class LoginCommandHandler {
 
     private User authenticate(LoginCommand command) {
         User user = userRepository.findSingleByUsername(command.username())
-            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
         if (!validatePassword(command, user))
-            throw new BusinessException("Invalid credentials");
+            throw new AuthenticationException("Invalid credentials");
 
         return user;
     }

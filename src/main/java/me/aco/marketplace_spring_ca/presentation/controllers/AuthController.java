@@ -46,28 +46,24 @@ public class AuthController {
     @PostMapping(value = "/login")
     public CompletableFuture<ResponseEntity<TokenDto>> login(@RequestBody LoginCommand command) {
         return loginCommandHandler.handle(command)
-                .thenApply(tokenDto -> ResponseEntity.ok(tokenDto))
-                .exceptionally(ex -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+                .thenApply(tokenDto -> ResponseEntity.ok(tokenDto));
     }
 
     @PostMapping(value = "/register")
     public CompletableFuture<ResponseEntity<UserDto>> register(@RequestBody RegisterCommand command) {
         return registerCommandHandler.handle(command)
-                .thenApply(userResp -> ResponseEntity.ok(userResp))
-                .exceptionally(ex -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+                .thenApply(userResp -> ResponseEntity.ok(userResp));
     }
 
     @PostMapping(value = "/refresh-token")
     public CompletableFuture<ResponseEntity<Long>> refreshToken(@RequestBody RefreshTokenCommand command) {
         return refreshTokenCommandHandler.handle(command)
-                .thenApply(userId -> ResponseEntity.ok(userId))
-                .exceptionally(ex -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+                .thenApply(userId -> ResponseEntity.ok(userId));
     }
 
     @PostMapping(value = "/revoke-token")
     public CompletableFuture<ResponseEntity<Long>> revokeToken(@RequestBody RevokeTokenCommand command) {
         return revokeTokenCommandHandler.handle(command)
-                .thenApply(userId -> ResponseEntity.ok(userId))
-                .exceptionally(ex -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+                .thenApply(userId -> ResponseEntity.ok(userId));
     }
 }
