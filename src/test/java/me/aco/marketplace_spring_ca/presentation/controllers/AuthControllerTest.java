@@ -178,10 +178,10 @@ class AuthControllerTest {
                 "access-token-123",
                 "refresh-token-456"
         );
-        Long userId = 1L;
+        TokenDto newTokenDto = new TokenDto("new-access-token-789", "new-refresh-token-012");
         
         when(refreshTokenCommandHandler.handle(any(RefreshTokenCommand.class)))
-                .thenReturn(CompletableFuture.completedFuture(userId));
+                .thenReturn(CompletableFuture.completedFuture(newTokenDto));
 
         // Act & Assert
         mockMvc.perform(post("/api/Auth/refresh-token")
@@ -190,7 +190,8 @@ class AuthControllerTest {
                 .andExpect(request().asyncStarted())
                 .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("1"));
+                .andExpect(jsonPath("$.accessToken").value("new-access-token-789"))
+                .andExpect(jsonPath("$.refreshToken").value("new-refresh-token-012"));
     }
 
     @Test
@@ -202,7 +203,7 @@ class AuthControllerTest {
                 "invalid-token"
         );
         
-        CompletableFuture<Long> failedFuture = new CompletableFuture<>();
+        CompletableFuture<TokenDto> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new IllegalArgumentException("User not found"));
         
         when(refreshTokenCommandHandler.handle(any(RefreshTokenCommand.class)))
