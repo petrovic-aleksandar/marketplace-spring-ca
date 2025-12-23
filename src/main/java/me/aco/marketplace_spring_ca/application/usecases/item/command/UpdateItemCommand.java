@@ -7,4 +7,15 @@ public record UpdateItemCommand(
         double price,
         long typeId,
         long sellerId
-) {}
+) {
+        public static UpdateItemCommand withId(long id, UpdateItemCommand command) {
+            return new UpdateItemCommand(
+                    id,
+                    command.name(),
+                    command.description(),
+                    command.price(),
+                    command.typeId(),
+                    command.sellerId()
+            );
+        }
+}

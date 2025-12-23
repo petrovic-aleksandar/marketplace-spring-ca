@@ -75,12 +75,8 @@ public class UsersController extends BaseController {
 
     @PostMapping("/{id}")
     public CompletableFuture<ResponseEntity<UserDto>> updateUser(@PathVariable Long id, @RequestBody UpdateUserCommand command) {
-        if (!id.equals(command.id())) {
-            throw new IllegalArgumentException("ID in path and request body must match");
-        }
-        return updateUserCommandHandler.handle(command)
+        return updateUserCommandHandler.handle(UpdateUserCommand.withId(id, command))
                 .thenApply(ResponseEntity::ok);
-        
     }
 
     @PostMapping("/deactivate/{id}")

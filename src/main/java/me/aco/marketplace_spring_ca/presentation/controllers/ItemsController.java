@@ -92,7 +92,7 @@ public class ItemsController extends BaseController {
 
     @PostMapping("/{itemId}")
     public CompletableFuture<ResponseEntity<ItemDto>> updateItem(@PathVariable Long itemId, @RequestBody UpdateItemCommand command) {
-        return updateItemCommandHandler.handle(command)
+        return updateItemCommandHandler.handle(UpdateItemCommand.withId(itemId, command))
                 .thenApply(ResponseEntity::ok);
     }
 
