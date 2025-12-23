@@ -1,5 +1,7 @@
 package me.aco.marketplace_spring_ca.application.dto;
 
+import java.math.BigDecimal;
+
 import me.aco.marketplace_spring_ca.domain.entities.User;
 
 public record UserDto(
@@ -8,7 +10,7 @@ public record UserDto(
 	String name,
 	String email,
 	String phone,
-	double balance,
+	BigDecimal balance,
 	String role,
 	boolean active
 ) {
@@ -19,7 +21,7 @@ public record UserDto(
 			user.getName(),
 			user.getEmail(),
 			user.getPhone(),
-			user.getBalance().doubleValue(),
+			user.getBalance(),
 			user.getRole().toString(),
 			user.isActive()
 		);
