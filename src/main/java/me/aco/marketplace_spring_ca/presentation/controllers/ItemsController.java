@@ -2,9 +2,7 @@ package me.aco.marketplace_spring_ca.presentation.controllers;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,15 +11,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import me.aco.marketplace_spring_ca.application.dto.ItemReq;
 import me.aco.marketplace_spring_ca.application.dto.ItemDto;
 import me.aco.marketplace_spring_ca.application.dto.ItemTypeDto;
-import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemTypeRepository;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
-import me.aco.marketplace_spring_ca.application.usecases.ItemService;
-import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemsByItemType;
+import me.aco.marketplace_spring_ca.application.usecases.item.command.ActivateItemCommand;
+import me.aco.marketplace_spring_ca.application.usecases.item.command.ActivateItemCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.item.command.AddItemCommand;
+import me.aco.marketplace_spring_ca.application.usecases.item.command.AddItemCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.item.command.DeactivateItemCommand;
+import me.aco.marketplace_spring_ca.application.usecases.item.command.DeactivateItemCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.item.command.DeleteItemCommand;
+import me.aco.marketplace_spring_ca.application.usecases.item.command.DeleteItemCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.item.command.UpdateItemCommand;
+import me.aco.marketplace_spring_ca.application.usecases.item.command.UpdateItemCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemByIdQuery;
+import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemByIdQueryHandler;
 import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemsByItemTypeQuery;
 import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemsByItemTypeQueryHandler;
 import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemsBySellerQuery;
@@ -31,32 +34,42 @@ import me.aco.marketplace_spring_ca.application.usecases.itemType.query.GetItemT
 
 @RestController
 @RequestMapping("/api/Item")
-public class ItemsController {
+public class ItemsController extends BaseController {
     
-    private final JpaItemRepository itemRepository;
-    private final JpaUserRepository userRepository;
-    private final ItemService itemService;
-    private final JpaItemTypeRepository itemTypeRepository;
-    private final GetItemTypesQueryHandler getItemTypesQueryHandler;
+    private final GetItemByIdQueryHandler getItemByIdQueryHandler;
     private final GetItemsByItemTypeQueryHandler getItemsByItemTypeQueryHandler;
     private final GetItemsBySellerQueryHandler getItemsBySellerQueryHandler;
+    private final AddItemCommandHandler addItemCommandHandler;
+    private final UpdateItemCommandHandler updateItemCommandHandler;
+    private final DeactivateItemCommandHandler deactivateItemCommandHandler;
+    private final ActivateItemCommandHandler activateItemCommandHandler;
+    private final DeleteItemCommandHandler deleteItemCommandHandler;
+    private final GetItemTypesQueryHandler getItemTypesQueryHandler;
 
-    public ItemsController(JpaItemRepository itemRepository, JpaUserRepository userRepository, JpaItemTypeRepository itemTypeRepository,
-                           GetItemTypesQueryHandler getItemTypesQueryHandler, GetItemsByItemTypeQueryHandler getItemsByItemTypeQueryHandler, GetItemsBySellerQueryHandler getItemsBySellerQueryHandler, ItemService itemService) {
-        this.itemRepository = itemRepository;
-        this.userRepository = userRepository;
-        this.itemService = itemService;
-        this.itemTypeRepository = itemTypeRepository;
-        this.getItemTypesQueryHandler = getItemTypesQueryHandler;
+    public ItemsController(GetItemByIdQueryHandler getItemByIdQueryHandler,
+            GetItemsByItemTypeQueryHandler getItemsByItemTypeQueryHandler,
+            GetItemsBySellerQueryHandler getItemsBySellerQueryHandler,
+            AddItemCommandHandler addItemCommandHandler,
+            UpdateItemCommandHandler updateItemCommandHandler,
+            DeactivateItemCommandHandler deactivateItemCommandHandler,
+            ActivateItemCommandHandler activateItemCommandHandler,
+            DeleteItemCommandHandler deleteItemCommandHandler,
+            GetItemTypesQueryHandler getItemTypesQueryHandler) {
+        this.getItemByIdQueryHandler = getItemByIdQueryHandler;
         this.getItemsByItemTypeQueryHandler = getItemsByItemTypeQueryHandler;
         this.getItemsBySellerQueryHandler = getItemsBySellerQueryHandler;
+        this.addItemCommandHandler = addItemCommandHandler;
+        this.updateItemCommandHandler = updateItemCommandHandler;
+        this.deactivateItemCommandHandler = deactivateItemCommandHandler;
+        this.activateItemCommandHandler = activateItemCommandHandler;
+        this.deleteItemCommandHandler = deleteItemCommandHandler;
+        this.getItemTypesQueryHandler = getItemTypesQueryHandler;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ItemDto> getItemById(@PathVariable Long id) {
-        var item = itemRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
-        return ResponseEntity.ok(new ItemDto(item));
+    public CompletableFuture<ResponseEntity<ItemDto>> getItemById(@PathVariable Long id) {
+        return getItemByIdQueryHandler.handle(new GetItemByIdQuery(id))
+                .thenApply(ResponseEntity::ok);
     }
 
     @GetMapping("/bySellerId/{sellerId}")
@@ -72,52 +85,33 @@ public class ItemsController {
     }
 
     @PostMapping
-    public ResponseEntity<ItemDto> addItem(@RequestBody ItemReq req) {
-        var seller = userRepository.findById(req.getSellerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
-        var itemType = itemTypeRepository.findById(req.getTypeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Item type not found"));
-        var addedItem = itemService.add(req, itemType, seller);
-        return ResponseEntity.status(HttpStatus.CREATED).body(addedItem);
+    public CompletableFuture<ResponseEntity<ItemDto>> addItem(@RequestBody AddItemCommand command) {
+        return addItemCommandHandler.handle(command)
+                .thenApply(this::created);
     }
 
     @PostMapping("/{itemId}")
-    public ResponseEntity<ItemDto> updateItem(@PathVariable Long itemId, @RequestBody ItemReq req) {
-        var existingItem = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
-        var seller = userRepository.findById(req.getSellerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
-        var itemType = itemTypeRepository.findById(req.getTypeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Item type not found"));
-        var updatedItem = itemService.update(req, itemType, seller, existingItem);
-        return ResponseEntity.ok(updatedItem);
+    public CompletableFuture<ResponseEntity<ItemDto>> updateItem(@PathVariable Long itemId, @RequestBody UpdateItemCommand command) {
+        return updateItemCommandHandler.handle(command)
+                .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping("/Deactivate/{id}")
-    public ResponseEntity<ItemDto> deactivateItem(@PathVariable Long id) {
-        var item = itemRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
-        item.deactivate();
-        var updatedItem = itemRepository.save(item);
-        return ResponseEntity.ok(new ItemDto(updatedItem));
+    public CompletableFuture<ResponseEntity<ItemDto>> deactivateItem(@PathVariable DeactivateItemCommand command) {
+        return deactivateItemCommandHandler.handle(command)
+                .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping("/Activate/{id}")
-    public ResponseEntity<ItemDto> activateItem(@PathVariable Long id) {
-        var item = itemRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
-        item.activate();
-        var updatedItem = itemRepository.save(item);
-        return ResponseEntity.ok(new ItemDto(updatedItem));
+    public CompletableFuture<ResponseEntity<ItemDto>> activateItem(@PathVariable ActivateItemCommand command) {
+        return activateItemCommandHandler.handle(command)
+                .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping("/Delete/{id}")
-    public ResponseEntity<ItemDto> deleteItem(@PathVariable Long id) {
-        var item = itemRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
-        item.softDelete();
-        var updatedItem = itemRepository.save(item);
-        return ResponseEntity.ok(new ItemDto(updatedItem));
+    public CompletableFuture<ResponseEntity<ItemDto>> deleteItem(@PathVariable DeleteItemCommand command) {
+        return deleteItemCommandHandler.handle(command)
+                .thenApply(ResponseEntity::ok);
     }
 
     @GetMapping("/Types")

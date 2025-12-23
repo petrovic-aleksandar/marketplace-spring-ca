@@ -51,6 +51,17 @@ public class Item {
     public Item() {
     }
 
+    // constructor without id for creating new items
+    public Item(String name, String description, BigDecimal price, ItemType itemType, User seller) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.type = itemType;
+        this.active = true;
+        this.deleted = false;
+        this.seller = seller;
+    }
+
     public Item(Long id, String name, String description, BigDecimal price, ItemType type, boolean active, boolean deleted, User seller, List<Image> images, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;

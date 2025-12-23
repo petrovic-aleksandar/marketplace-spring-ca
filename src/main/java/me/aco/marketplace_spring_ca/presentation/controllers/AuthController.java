@@ -22,7 +22,7 @@ import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeToke
 
 @RestController
 @RequestMapping("/api/Auth")
-public class AuthController {
+public class AuthController extends BaseController {
 
     private final LoginCommandHandler loginCommandHandler;
     private final RegisterCommandHandler registerCommandHandler;
@@ -51,7 +51,7 @@ public class AuthController {
     @PostMapping(value = "/register")
     public CompletableFuture<ResponseEntity<UserDto>> register(@RequestBody RegisterCommand command) {
         return registerCommandHandler.handle(command)
-                .thenApply(ResponseEntity::ok);
+                .thenApply(this::created);
     }
 
     @PostMapping(value = "/refresh-token")
