@@ -1,6 +1,7 @@
 package me.aco.marketplace_spring_ca.domain.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "items")
+@SQLRestriction("deleted = false")
 public class Item {
 
     @Id
