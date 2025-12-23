@@ -52,7 +52,7 @@ public class LoginCommandHandler {
             User user = userRepository.findSingleByUsername(command.username())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
-            if (!passwordHasher.verifyPassword(command.password(), user.getPassword()))
+            if (!passwordHasher.verify(command.password(), user.getPassword()))
                 throw new AuthenticationException("Invalid credentials");
 
             return user;

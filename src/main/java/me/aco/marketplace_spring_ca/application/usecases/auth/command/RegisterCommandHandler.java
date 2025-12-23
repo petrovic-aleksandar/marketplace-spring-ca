@@ -36,7 +36,7 @@ public class RegisterCommandHandler {
     }
 
     private User toUser(RegisterCommand command) {
-		String hashedPassword = passwordHasher.hashPassword(command.password());
+		String hashedPassword = passwordHasher.hash(command.password());
 		return new User(
 			command.username(),
 			hashedPassword,

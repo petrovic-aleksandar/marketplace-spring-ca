@@ -75,7 +75,7 @@ class LoginCommandHandlerTest {
 
         when(userRepository.findSingleByUsername("testuser"))
                 .thenReturn(Optional.of(testUser));
-        when(passwordHasher.verifyPassword("password123", testUser.getPassword()))
+        when(passwordHasher.verify("password123", testUser.getPassword()))
                 .thenReturn(true);
         when(tokenService.generateToken(testUser))
                 .thenReturn(expectedToken);
@@ -93,7 +93,7 @@ class LoginCommandHandlerTest {
         assertEquals(expectedToken, tokenDto.accessToken(), "Access token should match");
         assertEquals(expectedRefreshToken, tokenDto.refreshToken(), "Refresh token should match");
         verify(userRepository, times(1)).findSingleByUsername("testuser");
-        verify(passwordHasher, times(1)).verifyPassword("password123", testUser.getPassword());
+        verify(passwordHasher, times(1)).verify("password123", testUser.getPassword());
         verify(tokenService, times(1)).generateToken(testUser);
         verify(refreshTokenService, times(1)).generateRefreshToken();
         verify(userRepository, times(1)).save(any(User.class));
@@ -104,7 +104,7 @@ class LoginCommandHandlerTest {
         // Arrange
         when(userRepository.findSingleByUsername("testuser"))
                 .thenReturn(Optional.of(testUser));
-        when(passwordHasher.verifyPassword("wrongPassword", testUser.getPassword()))
+        when(passwordHasher.verify("wrongPassword", testUser.getPassword()))
                 .thenReturn(false);
 
         LoginCommand wrongPasswordCommand = new LoginCommand("testuser", "wrongPassword");
@@ -129,7 +129,7 @@ class LoginCommandHandlerTest {
         }
 
         verify(userRepository, times(1)).findSingleByUsername("testuser");
-        verify(passwordHasher, times(1)).verifyPassword("wrongPassword", testUser.getPassword());
+        verify(passwordHasher, times(1)).verify("wrongPassword", testUser.getPassword());
         verify(tokenService, never()).generateToken(any());
         verify(userRepository, never()).save(any(User.class));
     }
@@ -162,7 +162,7 @@ class LoginCommandHandlerTest {
         }
 
         verify(userRepository, times(1)).findSingleByUsername("nonexistentuser");
-        verify(passwordHasher, never()).verifyPassword(anyString(), anyString());
+        verify(passwordHasher, never()).verify(anyString(), anyString());
         verify(tokenService, never()).generateToken(any());
         verify(userRepository, never()).save(any(User.class));
     }

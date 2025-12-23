@@ -5,6 +5,5 @@ public record AddItemCommand(
         String description,
         double price,
         long typeId,
-        long sellerId) {
-
-}
+        long sellerId
+) {}

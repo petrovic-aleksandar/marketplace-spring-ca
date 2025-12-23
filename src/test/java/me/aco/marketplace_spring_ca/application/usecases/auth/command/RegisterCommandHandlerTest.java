@@ -65,7 +65,7 @@ class RegisterCommandHandlerTest {
         // Arrange
         when(userRepository.findSingleByUsername("newuser"))
                 .thenReturn(Optional.empty());
-        when(passwordHasher.hashPassword("password123"))
+        when(passwordHasher.hash("password123"))
                 .thenReturn("hashedPassword");
         when(userRepository.save(any(User.class)))
                 .thenReturn(mockSavedUser);
@@ -83,7 +83,7 @@ class RegisterCommandHandlerTest {
 
         // Verify interactions
         verify(userRepository, times(1)).findSingleByUsername("newuser");
-        verify(passwordHasher, times(1)).hashPassword("password123");
+        verify(passwordHasher, times(1)).hash("password123");
         verify(userRepository, times(1)).save(any(User.class));
 
         // Verify the saved user had correct properties
@@ -127,7 +127,7 @@ class RegisterCommandHandlerTest {
 
         // Verify no user was saved
         verify(userRepository, times(1)).findSingleByUsername("newuser");
-        verify(passwordHasher, never()).hashPassword(anyString());
+        verify(passwordHasher, never()).hash(anyString());
         verify(userRepository, never()).save(any(User.class));
     }
 }

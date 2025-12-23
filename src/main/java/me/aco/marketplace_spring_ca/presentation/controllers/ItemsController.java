@@ -85,7 +85,7 @@ public class ItemsController extends BaseController {
     }
 
     @PostMapping
-    public CompletableFuture<ResponseEntity<ItemDto>> addItem(@RequestBody AddItemCommand command) {
+    public CompletableFuture<ResponseEntity<ItemDto>> createItem(@RequestBody AddItemCommand command) {
         return addItemCommandHandler.handle(command)
                 .thenApply(this::created);
     }

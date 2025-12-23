@@ -1,5 +1,3 @@
 package me.aco.marketplace_spring_ca.application.usecases.item.command;
 
-public record ActivateItemCommand(Long id) {
-    
-}
+public record ActivateItemCommand(Long id) {}

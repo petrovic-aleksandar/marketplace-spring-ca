@@ -82,6 +82,18 @@ public class User {
         this.active = true;
     }
 
+    // Constructor for new user registration by admin with role specification
+    public User(String username, String hashedPassword, String name, String email, String phone, UserRole role) {
+        this.username = username;
+        this.password = hashedPassword;
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.balance = BigDecimal.ZERO;
+        this.role = role;
+        this.active = true;
+    }
+
     public Long getId() {
         return id;
     }

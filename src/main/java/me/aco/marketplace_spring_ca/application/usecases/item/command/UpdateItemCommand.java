@@ -6,6 +6,5 @@ public record UpdateItemCommand(
         String description,
         double price,
         long typeId,
-        long sellerId) {
-            
-}
+        long sellerId
+) {}
