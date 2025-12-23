@@ -15,7 +15,7 @@ public class TransferResp {
 	private String type;
 	private UserDto buyer;
 	private UserDto seller;
-	private ItemResp item;
+	private ItemDto item;
 	
 	public TransferResp(Transfer transfer) {
 		id = transfer.getId();
@@ -26,7 +26,7 @@ public class TransferResp {
 			PurchaseTransfer pt = (PurchaseTransfer) transfer;
 			buyer = new UserDto(pt.getBuyer());
 			seller = new UserDto(pt.getSeller());
-			item = new ItemResp(pt.getItem());
+			item = new ItemDto(pt.getItem());
 		}
 	}
 
@@ -78,11 +78,11 @@ public class TransferResp {
 		this.seller = seller;
 	}
 
-	public ItemResp getItem() {
+	public ItemDto getItem() {
 		return item;
 	}
 
-	public void setItem(ItemResp item) {
+	public void setItem(ItemDto item) {
 		this.item = item;
 	}
 }

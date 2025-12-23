@@ -45,24 +45,24 @@ public class AuthController {
     @PostMapping(value = "/login")
     public CompletableFuture<ResponseEntity<TokenDto>> login(@RequestBody LoginCommand command) {
         return loginCommandHandler.handle(command)
-                .thenApply(tokenDto -> ResponseEntity.ok(tokenDto));
+                .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping(value = "/register")
     public CompletableFuture<ResponseEntity<UserDto>> register(@RequestBody RegisterCommand command) {
         return registerCommandHandler.handle(command)
-                .thenApply(userResp -> ResponseEntity.ok(userResp));
+                .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping(value = "/refresh-token")
     public CompletableFuture<ResponseEntity<TokenDto>> refreshToken(@RequestBody RefreshTokenCommand command) {
         return refreshTokenCommandHandler.handle(command)
-                .thenApply(tokenDto -> ResponseEntity.ok(tokenDto));
+                .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping(value = "/revoke-token")
     public CompletableFuture<ResponseEntity<Long>> revokeToken(@RequestBody RevokeTokenCommand command) {
         return revokeTokenCommandHandler.handle(command)
-                .thenApply(userId -> ResponseEntity.ok(userId));
+                .thenApply(ResponseEntity::ok);
     }
 }
