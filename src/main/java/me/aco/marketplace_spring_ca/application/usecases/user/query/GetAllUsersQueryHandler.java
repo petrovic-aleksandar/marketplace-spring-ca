@@ -3,9 +3,12 @@ package me.aco.marketplace_spring_ca.application.usecases.user.query;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.stereotype.Service;
+
 import me.aco.marketplace_spring_ca.application.dto.UserDto;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
+@Service
 public class GetAllUsersQueryHandler {
 
     private final JpaUserRepository userRepository;

@@ -2,9 +2,12 @@ package me.aco.marketplace_spring_ca.application.usecases.item.command;
 
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.stereotype.Service;
+
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository;
 
+@Service
 public class DeleteItemCommandHandler {
 
     private final JpaItemRepository itemRepository;

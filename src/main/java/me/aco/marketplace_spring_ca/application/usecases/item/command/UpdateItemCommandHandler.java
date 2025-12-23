@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.stereotype.Service;
+
 import me.aco.marketplace_spring_ca.application.dto.ItemDto;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
 import me.aco.marketplace_spring_ca.domain.entities.ItemType;
@@ -12,6 +14,7 @@ import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemTypeRepository;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
+@Service
 public class UpdateItemCommandHandler {
 
     private final JpaItemRepository itemRepository;

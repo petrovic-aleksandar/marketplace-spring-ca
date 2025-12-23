@@ -26,7 +26,7 @@ import me.aco.marketplace_spring_ca.application.usecases.ImageService;
 
 @RestController
 @RequestMapping("/api/images")
-public class ImageController {
+public class ImageController extends BaseController {
 
     private final JpaImageRepository imageRepository;
     private final JpaItemRepository itemRepository;
@@ -81,7 +81,7 @@ public class ImageController {
     }
 
     @DeleteMapping("/{imageId}")
-    public ResponseEntity<Void> deleteImageById(@PathVariable Long imageId) {
+    public ResponseEntity<Void> deleteImage(@PathVariable Long imageId) {
         if (!imageRepository.existsById(imageId)) {
             throw new ResourceNotFoundException("Image not found");
         }
