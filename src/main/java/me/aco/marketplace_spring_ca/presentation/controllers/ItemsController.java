@@ -109,9 +109,9 @@ public class ItemsController extends BaseController {
     }
 
     @PostMapping("/Delete/{id}")
-    public CompletableFuture<ResponseEntity<ItemDto>> deleteItem(@PathVariable DeleteItemCommand command) {
+    public CompletableFuture<ResponseEntity<Void>> deleteItem(@PathVariable DeleteItemCommand command) {
         return deleteItemCommandHandler.handle(command)
-                .thenApply(ResponseEntity::ok);
+                .thenApply(this::noContent);
     }
 
     @GetMapping("/Types")

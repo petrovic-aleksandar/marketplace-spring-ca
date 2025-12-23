@@ -8,4 +8,8 @@ public abstract class BaseController {
     protected <T> ResponseEntity<T> created(T body) {
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
+
+    protected <T> ResponseEntity<T> noContent(T ignored) {
+        return ResponseEntity.noContent().build();
+    }
 }
