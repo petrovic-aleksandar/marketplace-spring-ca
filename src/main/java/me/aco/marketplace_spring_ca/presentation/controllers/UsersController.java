@@ -70,7 +70,6 @@ public class UsersController extends BaseController {
     public CompletableFuture<ResponseEntity<UserDto>> createUser(@RequestBody AddUserCommand command) {
         return addUserCommandHandler.handle(command)
                 .thenApply(this::created);
-        
     }
 
     @PostMapping("/{id}")

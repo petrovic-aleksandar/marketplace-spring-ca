@@ -1,10 +1,8 @@
 package me.aco.marketplace_spring_ca.presentation.controllers;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,69 +11,59 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import me.aco.marketplace_spring_ca.application.dto.TransferReq;
-import me.aco.marketplace_spring_ca.application.dto.TransferResp;
-import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaTransferRepository;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository;
-import me.aco.marketplace_spring_ca.application.usecases.TransferService;
+import me.aco.marketplace_spring_ca.application.dto.TransferDto;
+import me.aco.marketplace_spring_ca.application.usecases.transfer.command.AddPaymentCommand;
+import me.aco.marketplace_spring_ca.application.usecases.transfer.command.AddPaymentCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.transfer.command.AddWithdrawalCommand;
+import me.aco.marketplace_spring_ca.application.usecases.transfer.command.AddWithdrawalCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.transfer.command.PurchaseItemCommand;
+import me.aco.marketplace_spring_ca.application.usecases.transfer.command.PurchaseItemCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.transfer.query.GetTransfersByUserQuery;
+import me.aco.marketplace_spring_ca.application.usecases.transfer.query.GetTransfersByUserQueryHandler;
 
 @RestController
 @RequestMapping("/api/transfers")
-public class TransfersController {
+public class TransfersController extends BaseController {
 
-    private final JpaTransferRepository transferRepository;
-    private final JpaUserRepository userRepository;
-    private final JpaItemRepository itemRepository;
-    private final TransferService transferService;
+    private final GetTransfersByUserQueryHandler getTransfersByUserQueryHandler;
+    private final AddPaymentCommandHandler addPaymentCommandHandler;
+    private final AddWithdrawalCommandHandler addWithdrawalCommandHandler;
+    private final PurchaseItemCommandHandler purchaseItemCommandHandler;
 
-    public TransfersController(JpaTransferRepository transferRepository, JpaUserRepository userRepository,
-                               JpaItemRepository itemRepository, TransferService transferService) {
-        this.transferRepository = transferRepository;
-        this.userRepository = userRepository;
-        this.itemRepository = itemRepository;
-        this.transferService = transferService;
+    public TransfersController(
+            GetTransfersByUserQueryHandler getTransfersByUserQueryHandler,
+            AddPaymentCommandHandler addPaymentCommandHandler,
+            AddWithdrawalCommandHandler addWithdrawalCommandHandler,
+            PurchaseItemCommandHandler purchaseItemCommandHandler
+    ) {
+        this.getTransfersByUserQueryHandler = getTransfersByUserQueryHandler;
+        this.addPaymentCommandHandler = addPaymentCommandHandler;
+        this.addWithdrawalCommandHandler = addWithdrawalCommandHandler;
+        this.purchaseItemCommandHandler = purchaseItemCommandHandler;
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<List<TransferResp>> getByUserId(@PathVariable Long id) {
-        userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        
-        List<TransferResp> transfers = new ArrayList<>();
-        transfers.addAll(transferRepository.findByBuyerId(id).stream()
-                .map(TransferResp::new).collect(Collectors.toList()));
-        transfers.addAll(transferRepository.findBySellerId(id).stream()
-                .map(TransferResp::new).collect(Collectors.toList()));
-        
-        return ResponseEntity.ok(transfers);
+    public CompletableFuture<ResponseEntity<List<TransferDto>>> getByUserId(@PathVariable Long id) {
+        return getTransfersByUserQueryHandler.handle(new GetTransfersByUserQuery(id))
+            .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping("/payment")
-    public ResponseEntity<TransferResp> addPayment(@RequestBody TransferReq req) {
-        var user = userRepository.findById(req.getSellerId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        var transferResp = transferService.addPayment(req, user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(transferResp);
+    public CompletableFuture<ResponseEntity<TransferDto>> addPayment(@RequestBody AddPaymentCommand command) {
+        return addPaymentCommandHandler.handle(command)
+            .thenApply(this::created);
     }
 
     @PostMapping("/withdrawal")
-    public ResponseEntity<TransferResp> addWithdrawal(@RequestBody TransferReq req) {
-        var user = userRepository.findById(req.getSellerId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        var transferResp = transferService.addWithdrawal(req, user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(transferResp);
+    public CompletableFuture<ResponseEntity<TransferDto>> addWithdrawal(@RequestBody AddWithdrawalCommand command) {
+        return addWithdrawalCommandHandler.handle(command)
+            .thenApply(this::created);
     }
 
     @PostMapping("/purchase")
-    public ResponseEntity<TransferResp> addPurchase(@RequestBody TransferReq req) {
-        var buyer = userRepository.findById(req.getBuyerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Buyer not found"));
-        var seller = userRepository.findById(req.getSellerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
-        var item = itemRepository.findById(req.getItemId())
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
-        var transferResp = transferService.addPurchase(req, buyer, seller, item);
-        return ResponseEntity.status(HttpStatus.CREATED).body(transferResp);
+    public CompletableFuture<ResponseEntity<TransferDto>> addPurchase(@RequestBody PurchaseItemCommand command) {
+        return purchaseItemCommandHandler.handle(command)
+            .thenApply(this::created);
     }
+    
 }

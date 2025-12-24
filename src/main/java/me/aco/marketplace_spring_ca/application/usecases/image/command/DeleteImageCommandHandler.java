@@ -9,7 +9,7 @@ import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaImageRepositor
 @Service
 public class DeleteImageCommandHandler {
 
-    private JpaImageRepository imageRepository;
+    private final JpaImageRepository imageRepository;
 
     public DeleteImageCommandHandler(JpaImageRepository imageRepository) {
         this.imageRepository = imageRepository;
