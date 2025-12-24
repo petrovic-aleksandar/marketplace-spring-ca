@@ -7,11 +7,11 @@ import org.springframework.stereotype.Service;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaImageRepository;
 
 @Service
-public class DeleteImageCommandQuery {
+public class DeleteImageCommandHandler {
 
     private JpaImageRepository imageRepository;
 
-    public DeleteImageCommandQuery(JpaImageRepository imageRepository) {
+    public DeleteImageCommandHandler(JpaImageRepository imageRepository) {
         this.imageRepository = imageRepository;
     }
 
