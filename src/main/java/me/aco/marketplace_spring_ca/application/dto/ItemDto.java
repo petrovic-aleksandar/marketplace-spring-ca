@@ -7,7 +7,7 @@ import me.aco.marketplace_spring_ca.domain.entities.ItemType;
 import java.time.format.DateTimeFormatter;
 
 public record ItemDto(
-        long id,
+    Long id,
         String name,
         String description,
         double price,

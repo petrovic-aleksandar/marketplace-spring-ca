@@ -8,7 +8,7 @@ import me.aco.marketplace_spring_ca.domain.entities.transfers.WithdrawalTransfer
 import me.aco.marketplace_spring_ca.domain.entities.transfers.PaymentTransfer;
 
 public record TransferDto(
-    long id,
+    Long id,
     BigDecimal amount,
     String time,
     String type,

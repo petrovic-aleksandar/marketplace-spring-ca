@@ -3,7 +3,7 @@ package me.aco.marketplace_spring_ca.application.dto;
 import me.aco.marketplace_spring_ca.domain.entities.Image;
 
 public record ImageDto(
-        long id,
+    Long id,
         String path,
         boolean front
 ) {

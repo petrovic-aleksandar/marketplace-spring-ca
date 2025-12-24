@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 
 public record UserDto(
-	long id,
+	Long id,
 	String username,
 	String name,
 	String email,

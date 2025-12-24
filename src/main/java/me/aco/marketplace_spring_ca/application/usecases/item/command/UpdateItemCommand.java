@@ -1,7 +1,7 @@
 package me.aco.marketplace_spring_ca.application.usecases.item.command;
 
 public record UpdateItemCommand(
-        long id,
+        Long id,
         String name,
         String description,
         double price,
