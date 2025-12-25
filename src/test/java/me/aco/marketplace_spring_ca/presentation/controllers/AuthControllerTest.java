@@ -136,7 +136,7 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(registerCommand)))
                 .andExpect(request().asyncStarted())
                 .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.username").value("testuser"))
                 .andExpect(jsonPath("$.email").value("test@example.com"))
