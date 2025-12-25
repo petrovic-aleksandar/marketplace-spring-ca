@@ -67,6 +67,7 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenSuccess() throws ExecutionException, InterruptedException {
+
         // Arrange
         String newAccessToken = "new-access-token-456";
         String newRefreshToken = "new-refresh-token-789";
@@ -99,6 +100,7 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_InvalidAccessToken() {
+
         // Arrange
         when(tokenService.validateTokenIgnoringExpiration("invalid-access-token")).thenReturn(false);
         
@@ -125,6 +127,7 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_UserNotFound() {
+
         // Arrange
         when(tokenService.validateTokenIgnoringExpiration("valid-access-token")).thenReturn(true);
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
@@ -164,6 +167,7 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_RefreshTokenMismatch() {
+
         // Arrange
         when(tokenService.validateTokenIgnoringExpiration("valid-access-token")).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
@@ -203,6 +207,7 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_RefreshTokenExpired() {
+
         // Arrange
         testUser.setRefreshTokenExpiry(LocalDateTime.now().minusDays(1)); // Expired
         
@@ -238,6 +243,7 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_NullRefreshToken() {
+        
         // Arrange
         testUser.setRefreshToken(null);
         

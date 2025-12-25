@@ -51,6 +51,7 @@ class RevokeTokenCommandHandlerTest {
 
     @Test
     void testRevokeTokenSuccess() throws ExecutionException, InterruptedException {
+
         // Arrange
         RevokeTokenCommand command = new RevokeTokenCommand(1L);
         
@@ -72,6 +73,7 @@ class RevokeTokenCommandHandlerTest {
 
     @Test
     void testRevokeTokenFailure_UserNotFound() {
+
         // Arrange
         RevokeTokenCommand command = new RevokeTokenCommand(999L);
         
@@ -103,6 +105,7 @@ class RevokeTokenCommandHandlerTest {
 
     @Test
     void testRevokeTokenAlreadyNull() throws ExecutionException, InterruptedException {
+        
         // Arrange
         testUser.setRefreshToken(null); // Already null
         RevokeTokenCommand command = new RevokeTokenCommand(1L);

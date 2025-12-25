@@ -62,6 +62,7 @@ class RegisterCommandHandlerTest {
 
     @Test
     void testRegisterUserSuccess() throws ExecutionException, InterruptedException {
+
         // Arrange
         when(userRepository.findSingleByUsername("newuser"))
                 .thenReturn(Optional.empty());
@@ -98,6 +99,7 @@ class RegisterCommandHandlerTest {
 
     @Test
     void testRegisterUserWithExistingUsername() {
+        
         // Arrange
         User existingUser = new User();
         existingUser.setId(999L);

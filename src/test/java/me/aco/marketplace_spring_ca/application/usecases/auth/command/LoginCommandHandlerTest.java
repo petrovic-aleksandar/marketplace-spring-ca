@@ -69,6 +69,7 @@ class LoginCommandHandlerTest {
 
     @Test
     void testLoginSuccess() throws ExecutionException, InterruptedException {
+
         // Arrange
         String expectedToken = "jwt_token_123";
         String expectedRefreshToken = "refresh_token_456";
@@ -101,6 +102,7 @@ class LoginCommandHandlerTest {
 
     @Test
     void testLoginWithWrongPassword() {
+
         // Arrange
         when(userRepository.findSingleByUsername("testuser"))
                 .thenReturn(Optional.of(testUser));
@@ -136,6 +138,7 @@ class LoginCommandHandlerTest {
 
     @Test
     void testLoginWithNonExistingUser() {
+        
         // Arrange
         when(userRepository.findSingleByUsername("nonexistentuser"))
                 .thenReturn(Optional.empty());
