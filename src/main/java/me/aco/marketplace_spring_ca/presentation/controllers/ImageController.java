@@ -23,19 +23,19 @@ import me.aco.marketplace_spring_ca.application.usecases.image.command.DeleteIma
 import me.aco.marketplace_spring_ca.application.usecases.image.command.MakeImageFrontCommand;
 import me.aco.marketplace_spring_ca.application.usecases.image.command.MakeImangeFrontCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.image.query.GetImagesByItemQuery;
-import me.aco.marketplace_spring_ca.application.usecases.image.query.GetImagesByItemQueryHandler;
+import me.aco.marketplace_spring_ca.application.usecases.image.query.GetImagesByItemQueryHandler_JPA;
 
 @RestController
 @RequestMapping("/api/images")
 public class ImageController extends BaseController {
 
-    private final GetImagesByItemQueryHandler getImagesByItemQueryHandler;
+    private final GetImagesByItemQueryHandler_JPA getImagesByItemQueryHandler;
     private final AddImageCommandHandler addImageCommandHandler;
     private final MakeImangeFrontCommandHandler makeImangeFrontCommandHandler;
     private final DeleteImageCommandHandler deleteImageCommandHandler;
 
     public ImageController(
-            GetImagesByItemQueryHandler getImagesByItemQueryHandler,
+            GetImagesByItemQueryHandler_JPA getImagesByItemQueryHandler,
             AddImageCommandHandler addImageCommandHandler,
             MakeImangeFrontCommandHandler makeImangeFrontCommandHandler,
             DeleteImageCommandHandler deleteImageCommandHandler

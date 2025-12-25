@@ -44,12 +44,14 @@ Infrastructure → Domain
 - **Presentation**: REST controllers, error handling
 
 
+
 ## Command/Query Separation (CQS)
 
 The application layer follows a clear **Command/Query Separation** pattern:
 
 - **Command Handlers**: Responsible for operations that modify state (create, update, delete). Each command handler is annotated with `@Transactional` to ensure atomicity and consistency of changes.
-- **Query Handlers**: Responsible for read-only operations that fetch data. Query handlers may be annotated with `@Transactional(readOnly = true)` to optimize performance and signal intent, but do not modify state.
+- **Query Handlers**: Responsible for read-only operations that fetch data. Query handlers may be annotated with `@Transactional(readOnly = true)` to optimize performance and signal intent, but do not modify state. 
+   - **Note:** Query handlers can use faster Spring Data CRUD repositories (such as `CrudRepository` or `PagingAndSortingRepository`) instead of full JPA repositories when only simple read operations are needed. This can improve performance for queries that do not require complex JPA features.
 
 This separation improves maintainability, clarity, and testability. It also allows for more granular transaction management and aligns with best practices for scalable application design.
 
