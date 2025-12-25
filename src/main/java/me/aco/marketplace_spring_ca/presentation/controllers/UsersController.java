@@ -54,37 +54,37 @@ public class UsersController extends BaseController {
     }
 
     @GetMapping("/{id}")
-    public CompletableFuture<ResponseEntity<UserDto>> getUserById(@PathVariable Long id) {
+    public CompletableFuture<ResponseEntity<UserDto>> getById(@PathVariable Long id) {
         return getUserByIdQueryHandler.handle(new GetUserByIdQuery(id))
                 .thenApply(ResponseEntity::ok);
     }
 
     @GetMapping
-    public CompletableFuture<ResponseEntity<List<UserDto>>> getAllUsers() {
+    public CompletableFuture<ResponseEntity<List<UserDto>>> getAll() {
         return getAllUsersQueryHandler.handle(new GetAllUsersQuery())
                 .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping
-    public CompletableFuture<ResponseEntity<UserDto>> createUser(@RequestBody AddUserCommand command) {
+    public CompletableFuture<ResponseEntity<UserDto>> create(@RequestBody AddUserCommand command) {
         return addUserCommandHandler.handle(command)
                 .thenApply(this::created);
     }
 
     @PostMapping("/{id}")
-    public CompletableFuture<ResponseEntity<UserDto>> updateUser(@PathVariable Long id, @RequestBody UpdateUserCommand command) {
+    public CompletableFuture<ResponseEntity<UserDto>> update(@PathVariable Long id, @RequestBody UpdateUserCommand command) {
         return updateUserCommandHandler.handle(UpdateUserCommand.withId(id, command))
                 .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping("/deactivate/{id}")
-    public CompletableFuture<ResponseEntity<UserDto>> deactivateUser(@PathVariable Long id) {
+    public CompletableFuture<ResponseEntity<UserDto>> deactivate(@PathVariable Long id) {
         return deactivateUserCommandHandler.handle(new DeactivateUserCommand(id))
                 .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping("/activate/{id}")
-    public CompletableFuture<ResponseEntity<UserDto>> activateUser(@PathVariable Long id) {
+    public CompletableFuture<ResponseEntity<UserDto>> activate(@PathVariable Long id) {
         return activateUserCommandHandler.handle(new ActivateUserCommand(id))
                 .thenApply(ResponseEntity::ok);
     }

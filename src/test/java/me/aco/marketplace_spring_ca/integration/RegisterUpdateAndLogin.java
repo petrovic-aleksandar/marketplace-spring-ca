@@ -19,9 +19,8 @@ import me.aco.marketplace_spring_ca.application.usecases.user.command.UpdateUser
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -36,7 +35,7 @@ public class RegisterUpdateAndLogin {
     private static final String LOGIN_URI = "/api/Auth/login";
 
     @Test
-    public void testRegisterAndLogin() throws Exception {
+    public void testRegisterUpdateAndLogin() throws Exception {
 
         // Step 1: Register a new user
         RegisterCommand registerCommand = new RegisterCommand(
@@ -55,6 +54,7 @@ public class RegisterUpdateAndLogin {
 
         // Async dispatch and assert 201 Created
         mockMvc.perform(asyncDispatch(regResult))
+            .andDo(print())
             .andExpect(status().isCreated());
         
         // Step 2: Login with a newly created user
@@ -71,6 +71,7 @@ public class RegisterUpdateAndLogin {
 
         // Async dispatch and assert 200 OK and token presence
         mockMvc.perform(asyncDispatch(loginResult))
+            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.accessToken").isString())
             .andExpect(jsonPath("$.accessToken").isNotEmpty())
@@ -90,13 +91,14 @@ public class RegisterUpdateAndLogin {
         );
 
         // Perform update
-        var updateResult = mockMvc.perform(post("/api/User/update")
+        var updateResult = mockMvc.perform(post("/api/User/1")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(command)))
             .andReturn();
 
         // Async dispatch and assert 200 OK
         mockMvc.perform(asyncDispatch(updateResult))
+            .andDo(print())
             .andExpect(status().isOk());
 
         // Assert changes
@@ -115,13 +117,14 @@ public class RegisterUpdateAndLogin {
         );
 
         // Perform update
-        var updateResult2 = mockMvc.perform(post("/api/User/update")
+        var updateResult2 = mockMvc.perform(post("/api/User/1")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(updCommand)))
             .andReturn();
 
         // Async dispatch and assert 200 OK
         mockMvc.perform(asyncDispatch(updateResult2))
+            .andDo(print())
             .andExpect(status().isOk());
 
         // Step 5: Login with the updated password
@@ -138,6 +141,7 @@ public class RegisterUpdateAndLogin {
 
         // Async dispatch and assert 200 OK and token presence
         mockMvc.perform(asyncDispatch(loginResult2))
+            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.accessToken").isString())
             .andExpect(jsonPath("$.accessToken").isNotEmpty())
