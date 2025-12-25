@@ -29,7 +29,7 @@ import me.aco.marketplace_spring_ca.application.usecases.user.query.GetUserByIdQ
 import me.aco.marketplace_spring_ca.application.usecases.user.query.GetUserByIdQueryHandler;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/User")
 public class UsersController extends BaseController {
 
     private final GetUserByIdQueryHandler getUserByIdQueryHandler;
@@ -54,15 +54,14 @@ public class UsersController extends BaseController {
     }
 
     @GetMapping("/{id}")
-    public CompletableFuture<ResponseEntity<UserDto>> getUserById(@PathVariable GetUserByIdQuery query) {
-        return getUserByIdQueryHandler.handle(query)
+    public CompletableFuture<ResponseEntity<UserDto>> getUserById(@PathVariable Long id) {
+        return getUserByIdQueryHandler.handle(new GetUserByIdQuery(id))
                 .thenApply(ResponseEntity::ok);
-        
     }
 
     @GetMapping
-    public CompletableFuture<ResponseEntity<List<UserDto>>> getAllUsers(@PathVariable GetAllUsersQuery query) {
-        return getAllUsersQueryHandler.handle(query)
+    public CompletableFuture<ResponseEntity<List<UserDto>>> getAllUsers() {
+        return getAllUsersQueryHandler.handle(new GetAllUsersQuery())
                 .thenApply(ResponseEntity::ok);
     }
 
