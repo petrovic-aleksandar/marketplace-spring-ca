@@ -15,10 +15,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
 import me.aco.marketplace_spring_ca.application.usecases.user.command.UpdateUserCommand;
+import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -28,6 +31,8 @@ public class RegisterUpdateAndLogin {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private JpaUserRepository userRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -78,9 +83,13 @@ public class RegisterUpdateAndLogin {
             .andExpect(jsonPath("$.refreshToken").isString())
             .andExpect(jsonPath("$.refreshToken").isNotEmpty());
 
-        // Step 3: Update user
+        // Step 3: Verify user exists in repository
+        var userOpt = userRepository.findSingleByUsername("newuser");
+        assertEquals(true, userOpt.isPresent(), "User should exist in repository after registration");
+
+        // Step 4: Update user
         UpdateUserCommand command = new UpdateUserCommand(
-                1L,
+                userOpt.get().getId(),
                 "newuser",
                 false,
                 "",
@@ -91,7 +100,7 @@ public class RegisterUpdateAndLogin {
         );
 
         // Perform update
-        var updateResult = mockMvc.perform(post("/api/User/1")
+        var updateResult = mockMvc.perform(post("/api/User/" + userOpt.get().getId())
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(command)))
             .andReturn();
@@ -102,11 +111,11 @@ public class RegisterUpdateAndLogin {
             .andExpect(status().isOk());
 
         // Assert changes
-        assertEquals("newuser", updateResult.getResponse().getContentAsString().contains("Updated User"));
+        assertTrue(updateResult.getResponse().getContentAsString().contains("Updated User"));
 
         // Step 4: Change password
         UpdateUserCommand updCommand = new UpdateUserCommand(
-                1L,
+                userOpt.get().getId(),
                 "newuser",
                 true,
                 "updatedPassword123",
@@ -117,7 +126,7 @@ public class RegisterUpdateAndLogin {
         );
 
         // Perform update
-        var updateResult2 = mockMvc.perform(post("/api/User/1")
+        var updateResult2 = mockMvc.perform(post("/api/User/" + userOpt.get().getId())
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(updCommand)))
             .andReturn();
