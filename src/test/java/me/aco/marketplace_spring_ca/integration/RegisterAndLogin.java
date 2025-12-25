@@ -17,16 +17,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
 
 @SpringBootTest
 @AutoConfigureMockMvc
 public class RegisterAndLogin {
-
-
-    @Autowired
-    private JpaUserRepository userRepository;
 
     @Autowired
     private MockMvc mockMvc;
@@ -35,12 +30,6 @@ public class RegisterAndLogin {
 
     private static final String REGISTER_URI = "/api/Auth/register";
     private static final String LOGIN_URI = "/api/Auth/login";
-
-
-    @BeforeEach
-    public void setup() {
-        // You can add setup logic here if needed
-    }
 
     @Test
     public void testRegisterAndLogin() throws Exception {
@@ -84,7 +73,7 @@ public class RegisterAndLogin {
             .andExpect(MockMvcResultMatchers.jsonPath("$.refreshToken").isString())
             .andExpect(MockMvcResultMatchers.jsonPath("$.refreshToken").isNotEmpty());
 
-        // 
+        // Step 3: TODO
 
     }
     
