@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
 import me.aco.marketplace_spring_ca.application.usecases.user.command.UpdateUserCommand;
+import me.aco.marketplace_spring_ca.domain.intefrace.PasswordHasher;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,6 +34,8 @@ public class RegisterUpdateAndLogin {
     private MockMvc mockMvc;
     @Autowired
     private JpaUserRepository userRepository;
+    @Autowired
+    private PasswordHasher passwordHasher;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -61,6 +64,11 @@ public class RegisterUpdateAndLogin {
         mockMvc.perform(asyncDispatch(regResult))
             .andDo(print())
             .andExpect(status().isCreated());
+
+        // Assert password is hashed in repository
+        var registeredUserOpt = userRepository.findSingleByUsername("newuser");
+        assertEquals(true, registeredUserOpt.isPresent(), "User should exist in repository after registration");
+        assertTrue(passwordHasher.verify("password123", registeredUserOpt.get().getPassword()), "Password should match after registration");
         
         // Step 2: Login with a newly created user
         LoginCommand loginCommand = new LoginCommand(
@@ -135,6 +143,11 @@ public class RegisterUpdateAndLogin {
         mockMvc.perform(asyncDispatch(updateResult2))
             .andDo(print())
             .andExpect(status().isOk());
+
+        // Assert password is changed in repository
+        var updatedUserOpt = userRepository.findSingleByUsername("newuser");
+        assertTrue(updatedUserOpt.isPresent(), "User should exist after password update");
+        assertTrue(passwordHasher.verify("updatedPassword123", updatedUserOpt.get().getPassword()), "Password should match after update");
 
         // Step 5: Login with the updated password
         LoginCommand loginCommand2 = new LoginCommand(

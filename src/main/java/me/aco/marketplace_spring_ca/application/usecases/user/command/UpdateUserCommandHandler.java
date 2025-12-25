@@ -6,15 +6,18 @@ import org.springframework.stereotype.Service;
 
 import me.aco.marketplace_spring_ca.application.dto.UserDto;
 import me.aco.marketplace_spring_ca.domain.enums.UserRole;
+import me.aco.marketplace_spring_ca.domain.intefrace.PasswordHasher;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
 @Service
 public class UpdateUserCommandHandler {
 
     private final JpaUserRepository userRepository;
+    private final PasswordHasher passwordHasher;
 
-    public UpdateUserCommandHandler(JpaUserRepository userRepository) {
+    public UpdateUserCommandHandler(JpaUserRepository userRepository, PasswordHasher passwordHasher) {
         this.userRepository = userRepository;
+        this.passwordHasher = passwordHasher;
     }
 
     public CompletableFuture<UserDto> handle(UpdateUserCommand command) {
@@ -24,7 +27,7 @@ public class UpdateUserCommandHandler {
 
             user.setUsername(command.username());
             if (command.updatePassword()) {
-                user.setPassword(command.password());
+                user.setPassword(passwordHasher.hash(command.password()));
             }
             user.setName(command.name());
             user.setEmail(command.email());
