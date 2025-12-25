@@ -1,4 +1,4 @@
-package me.aco.marketplace_spring_ca.util;
+package me.aco.marketplace_spring_ca.application.usecases.util;
 
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;

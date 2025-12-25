@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import me.aco.marketplace_spring_ca.application.dto.ImageDto;
+import me.aco.marketplace_spring_ca.application.usecases.util.CollectionUtils;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.CrudImageRepository;
-import me.aco.marketplace_spring_ca.util.CollectionUtils;
 
 @Service
 @Transactional(readOnly = true)
