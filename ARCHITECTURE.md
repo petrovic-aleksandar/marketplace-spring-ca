@@ -1,106 +1,105 @@
-# Marketplace Spring Clean Architecture
+src/main/java/me/aco/marketplace_spring_ca/
+
+# Marketplace Spring Pragmatic Clean Architecture
 
 ## Architecture Overview
 
-This project implements a **pragmatic Clean Architecture** approach where JPA entities are merged with the domain layer to reduce complexity while maintaining separation of concerns.
+This project uses a **pragmatic Clean Architecture** where domain and persistence (JPA) entities are merged. This reduces boilerplate and complexity, while still maintaining clear separation of concerns for business logic, application orchestration, and external interfaces.
 
 ### Layer Structure
 
 ```
 src/main/java/me/aco/marketplace_spring_ca/
-├── domain/                      # Business logic & entities (with JPA annotations)
+├── domain/                      # Business logic & entities (JPA-annotated)
 │   ├── entities/               # Domain entities (also JPA entities)
-│   │   ├── Product.java
-│   │   └── User.java
-│   └── repositories/           # Repository interfaces (ports)
-│       ├── ProductRepository.java
-│       └── UserRepository.java
+│   └── enums/                  # Domain enums
+│   └── intefrace/              # Domain interfaces (e.g., repository ports)
 │
 ├── application/                # Application business rules
 │   ├── dto/                    # Data Transfer Objects
-│   │   ├── CreateProductRequest.java
-│   │   ├── UpdateProductRequest.java
-│   │   ├── ProductResponse.java
-│   │   ├── CreateUserRequest.java
-│   │   └── UserResponse.java
 │   ├── exceptions/             # Application exceptions
-│   │   ├── BusinessException.java
-│   │   └── ResourceNotFoundException.java
-│   └── usecases/              # Use cases / Application services
-│       ├── ProductService.java
-│       └── UserService.java
+│   └── usecases/               # Use cases / Application services
 │
 ├── infrastructure/             # External concerns
-│   ├── persistence/           # JPA repositories
-│   │   ├── JpaProductRepository.java
-│   │   └── JpaUserRepository.java
-│   └── adapters/              # Repository adapters
-│       ├── ProductRepositoryAdapter.java
-│       └── UserRepositoryAdapter.java
+│   ├── config/                 # Spring and app config
+│   ├── file/                   # File storage, etc.
+│   ├── persistence/            # Spring Data JPA repositories (may be thin wrappers)
+│   └── security/               # Security config
 │
-└── presentation/              # API layer
-    ├── controllers/           # REST controllers
-    │   ├── ProductController.java
-    │   └── UserController.java
-    └── error/                 # Error handling
-        ├── ErrorResponse.java
-        └── GlobalExceptionHandler.java
+└── presentation/               # API layer
+   ├── controllers/            # REST controllers
+   └── error/                  # Error handling
 ```
 
 ## Dependency Flow
 
 ```
-Presentation → Application → Domain ← Infrastructure
+Presentation → Application → Domain
+Infrastructure → Domain
 ```
 
-- **Domain**: Core business logic, entities with JPA annotations, repository interfaces
+- **Domain**: Core business logic, entities with JPA annotations, repository interfaces (ports)
 - **Application**: Use cases, DTOs, orchestrates domain logic
-- **Infrastructure**: Implements repository interfaces using Spring Data JPA
+- **Infrastructure**: Implements repository interfaces using Spring Data JPA, config, file, security
 - **Presentation**: REST controllers, error handling
+
+
+## Command/Query Separation (CQS)
+
+The application layer follows a clear **Command/Query Separation** pattern:
+
+- **Command Handlers**: Responsible for operations that modify state (create, update, delete). Each command handler is annotated with `@Transactional` to ensure atomicity and consistency of changes.
+- **Query Handlers**: Responsible for read-only operations that fetch data. Query handlers may be annotated with `@Transactional(readOnly = true)` to optimize performance and signal intent, but do not modify state.
+
+This separation improves maintainability, clarity, and testability. It also allows for more granular transaction management and aligns with best practices for scalable application design.
 
 ## Design Decisions
 
-### 1. **Merged Domain and Persistence Layer**
-   - JPA entities are in the domain layer with annotations
-   - **Pros**: 
-     - Reduced complexity
-     - Less boilerplate code
+### 1. **Merged Domain and JPA Entities**
+   - Domain entities are also JPA entities (with annotations)
+   - **Pros:**
+     - Reduced complexity and boilerplate
      - No need for entity-to-model mapping
-   - **Cons**: 
-     - Domain depends on JPA framework
-     - Harder to switch persistence technologies
-   - **Trade-off accepted**: For most applications, the simplicity gain outweighs the coupling
+     - Simpler codebase for most business apps
+   - **Cons:**
+     - Domain is coupled to JPA (harder to swap persistence tech)
+   - **Trade-off:** Simplicity and maintainability are prioritized over pure decoupling
 
-### 2. **Repository Pattern**
-   - Domain defines repository interfaces (ports)
-   - Infrastructure provides implementations (adapters)
-   - Application layer depends on domain interfaces only
+### 2. **Repository Interfaces in Domain**
+   - Domain layer defines repository interfaces (ports)
+   - Infrastructure implements these interfaces using Spring Data JPA
+   - Application and presentation layers depend only on domain interfaces
 
-### 3. **Use Case Services**
-   - Each service represents application use cases
-   - Orchestrates domain entities and repositories
-   - Handles transactions
+### 3. **Use Case Services in Application Layer**
+   - Application layer contains use case services
+   - Orchestrates domain logic and repositories
+   - Handles transactions and business workflows
 
-### 4. **DTOs in Application Layer**
-   - Separate request/response DTOs
-   - Prevents domain entities from leaking to presentation
-   - Allows API evolution independent of domain
+### 4. **DTOs for API Boundaries**
+   - Application layer defines DTOs for requests/responses
+   - Prevents domain entities from leaking to API
+   - Allows API evolution without breaking domain logic
+
 
 ## Key Features
 
 ### Domain Logic in Entities
-Entities contain business rules:
+Domain entities encapsulate business rules and are directly annotated as JPA entities. Example:
 ```java
-public void reduceStock(int quantity) {
-    if (quantity > stockQuantity) {
-        throw new IllegalArgumentException("Insufficient stock");
-    }
-    this.stockQuantity -= quantity;
+@Entity
+public class Product {
+   // ... fields ...
+   public void reduceStock(int quantity) {
+      if (quantity > stockQuantity) {
+         throw new IllegalArgumentException("Insufficient stock");
+      }
+      this.stockQuantity -= quantity;
+   }
 }
 ```
 
 ### Transaction Management
-Use cases are annotated with `@Transactional`:
+Use case services in the application layer are annotated with `@Transactional` to ensure business operations are atomic:
 ```java
 @Service
 @Transactional
@@ -108,7 +107,7 @@ public class ProductService { ... }
 ```
 
 ### Global Exception Handling
-Centralized error handling in `GlobalExceptionHandler`
+Centralized error handling is provided in `GlobalExceptionHandler` in the presentation layer.
 
 ## Running the Application
 

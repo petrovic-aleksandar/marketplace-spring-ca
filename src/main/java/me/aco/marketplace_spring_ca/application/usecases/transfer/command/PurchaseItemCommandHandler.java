@@ -3,7 +3,9 @@ package me.aco.marketplace_spring_ca.application.usecases.transfer.command;
 import java.math.BigDecimal;
 import java.util.concurrent.CompletableFuture;
 
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import me.aco.marketplace_spring_ca.application.dto.TransferDto;
 import me.aco.marketplace_spring_ca.domain.entities.transfers.PurchaseTransfer;
@@ -12,6 +14,7 @@ import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaTransferReposi
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
 @Service
+@Transactional
 public class PurchaseItemCommandHandler {
 
     private final JpaTransferRepository transferRepository;

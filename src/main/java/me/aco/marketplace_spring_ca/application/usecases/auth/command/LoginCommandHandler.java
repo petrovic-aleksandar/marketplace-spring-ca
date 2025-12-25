@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import me.aco.marketplace_spring_ca.application.dto.TokenDto;
 import me.aco.marketplace_spring_ca.application.exceptions.AuthenticationException;
@@ -15,6 +16,7 @@ import me.aco.marketplace_spring_ca.domain.intefrace.TokenService;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
 @Service
+@Transactional
 public class LoginCommandHandler {
 
     private static final int REFRESH_TOKEN_VALIDITY_DAYS = 1;
