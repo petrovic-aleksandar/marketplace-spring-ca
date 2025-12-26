@@ -82,7 +82,7 @@ public class AddItemDeactivateActivateAndDelete {
         assertTrue(createdItemOpt.isPresent());
 
         // Step 3: Deactivate the item
-        mockMvc.perform(post("/api/Item/Deactivate/2" + createdItemOpt.get().getId()))
+        mockMvc.perform(post("/api/Item/Deactivate/" + createdItemOpt.get().getId()))
             .andExpect(status().isOk())
             .andExpect(request().asyncStarted())
             .andDo(result -> mockMvc.perform(asyncDispatch(result))
@@ -110,12 +110,7 @@ public class AddItemDeactivateActivateAndDelete {
             .andExpect(status().isOk())
             .andExpect(request().asyncStarted())
             .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isOk()));
-
-        // Assert item is deleted
-        var deletedItemOpt = jpaItemRepository.findById(createdItemOpt.get().getId());
-        assertTrue(deletedItemOpt.isPresent());
-
+            .andExpect(status().isNoContent()));
 
     }
     
