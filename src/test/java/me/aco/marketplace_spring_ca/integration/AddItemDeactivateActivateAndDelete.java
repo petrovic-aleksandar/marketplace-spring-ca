@@ -86,13 +86,7 @@ public class AddItemDeactivateActivateAndDelete {
             .andExpect(status().isOk())
             .andExpect(request().asyncStarted())
             .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isOk())); 
-        
-            mockMvc.perform(post("/api/Item/Deactivate/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk()));
 
         // Assert item is deactivated
         var deactivatedItemOpt = jpaItemRepository.findById(createdItemOpt.get().getId());
