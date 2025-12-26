@@ -10,4 +10,8 @@ public record AddImageCommand(
     public static AddImageCommand withStream(InputStream stream, AddImageCommand command) {
         return new AddImageCommand(command.itemId(), command.fileName(), stream);
     }
+
+    public static AddImageCommand withId(Long itemId, AddImageCommand command) {
+        return new AddImageCommand(itemId, command.fileName(), command.fileStream());
+    }
 }
