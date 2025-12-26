@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import me.aco.marketplace_spring_ca.application.dto.ItemDto;
+import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository;
 
@@ -24,6 +25,8 @@ public class DeactivateItemCommandHandler {
         return CompletableFuture.supplyAsync(() -> {
             var item = itemRepository.findById(command.id())
                     .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+            if (!item.isActive())
+                throw new BusinessException("Item is already inactive");
             item.deactivate();
             return new ItemDto(itemRepository.save(item));
         });
