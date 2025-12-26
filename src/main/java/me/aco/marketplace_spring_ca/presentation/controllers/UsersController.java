@@ -59,7 +59,7 @@ public class UsersController extends BaseController {
                 .thenApply(ResponseEntity::ok);
     }
 
-    @GetMapping
+    @GetMapping("/")
     public CompletableFuture<ResponseEntity<List<UserDto>>> getAll() {
         return getAllUsersQueryHandler.handle(new GetAllUsersQuery())
                 .thenApply(ResponseEntity::ok);
