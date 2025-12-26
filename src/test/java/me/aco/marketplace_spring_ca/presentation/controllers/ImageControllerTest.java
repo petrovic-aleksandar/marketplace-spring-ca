@@ -51,11 +51,11 @@ public class ImageControllerTest {
         when(addImageCommandHandler.handle(any())).thenReturn(CompletableFuture.completedFuture(dto));
 
         mockMvc.perform(multipart("/api/Image/item/" + itemId)
-                .file(file)
-                .param("fileName", fileName))
+                    .file(file)
+                    .param("fileName", fileName))
                 .andExpect(request().asyncStarted())
                 .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(999L))
                 .andExpect(jsonPath("$.path").value(fileName));
     }

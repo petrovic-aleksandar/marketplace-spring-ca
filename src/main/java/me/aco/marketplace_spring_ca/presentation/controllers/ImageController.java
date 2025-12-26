@@ -60,7 +60,7 @@ public class ImageController extends BaseController {
                 throw new RuntimeException("Failed to read uploaded file", e);
             }
         }).thenCompose(addImageCommandHandler::handle)
-          .thenApply(ResponseEntity::ok);
+          .thenApply(this::created);
     }
 
     @PostMapping("/front/{imageId}")
