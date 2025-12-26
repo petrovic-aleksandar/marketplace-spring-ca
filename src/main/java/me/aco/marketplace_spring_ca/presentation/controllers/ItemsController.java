@@ -97,20 +97,20 @@ public class ItemsController extends BaseController {
     }
 
     @PostMapping("/Deactivate/{id}")
-    public CompletableFuture<ResponseEntity<ItemDto>> deactivateItem(@PathVariable DeactivateItemCommand command) {
-        return deactivateItemCommandHandler.handle(command)
+    public CompletableFuture<ResponseEntity<ItemDto>> deactivateItem(@PathVariable Long id) {
+        return deactivateItemCommandHandler.handle(new DeactivateItemCommand(id))
                 .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping("/Activate/{id}")
-    public CompletableFuture<ResponseEntity<ItemDto>> activateItem(@PathVariable ActivateItemCommand command) {
-        return activateItemCommandHandler.handle(command)
+    public CompletableFuture<ResponseEntity<ItemDto>> activateItem(@PathVariable Long id) {
+        return activateItemCommandHandler.handle(new ActivateItemCommand(id))
                 .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping("/Delete/{id}")
-    public CompletableFuture<ResponseEntity<Void>> deleteItem(@PathVariable DeleteItemCommand command) {
-        return deleteItemCommandHandler.handle(command)
+    public CompletableFuture<ResponseEntity<Void>> deleteItem(@PathVariable Long id) {
+        return deleteItemCommandHandler.handle(new DeleteItemCommand(id))
                 .thenApply(this::noContent);
     }
 
