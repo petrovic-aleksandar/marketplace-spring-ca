@@ -12,7 +12,4 @@ import java.util.List;
 public interface JpaItemRepository extends JpaRepository<Item, Long> {
     List<Item> findBySeller(User seller);
     List<Item> findByType(ItemType type);
-    List<Item> findByNameContainingIgnoreCase(String name);
-    List<Item> findByActiveTrue();
-    List<Item> findByDeletedFalse();
 }
