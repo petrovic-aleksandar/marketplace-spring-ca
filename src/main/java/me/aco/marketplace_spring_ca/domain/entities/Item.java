@@ -27,6 +27,7 @@ public class Item {
     @Column(nullable = false)
     private BigDecimal price;
 
+    @ManyToOne
     @JoinColumn(name = "item_type_id", nullable = false)
     private ItemType type;
 
@@ -36,6 +37,7 @@ public class Item {
     @Column(nullable = false)
     private boolean deleted;
 
+    @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
 
