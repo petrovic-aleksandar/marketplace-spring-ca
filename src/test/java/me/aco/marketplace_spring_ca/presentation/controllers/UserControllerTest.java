@@ -97,7 +97,7 @@ public class UserControllerTest {
         when(getAllUsersQueryHandler.handle(any())).thenReturn(CompletableFuture.completedFuture(users));
         
         // Act & Assert
-        mockMvc.perform(get("/api/User"))
+        mockMvc.perform(get("/api/User/ "))
             .andExpect(request().asyncStarted())
             .andDo(result -> mockMvc.perform(asyncDispatch(result)))
             .andExpect(status().isOk())

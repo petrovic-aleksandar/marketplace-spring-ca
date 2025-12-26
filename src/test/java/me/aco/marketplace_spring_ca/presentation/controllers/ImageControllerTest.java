@@ -47,7 +47,7 @@ public class ImageControllerTest {
         Long itemId = 1L;
         String fileName = "test.jpg";
         MockMultipartFile file = new MockMultipartFile("file", fileName, MediaType.IMAGE_JPEG_VALUE, "dummy".getBytes());
-        ImageDto dto = new ImageDto(10L, fileName, false);
+        ImageDto dto = new ImageDto(999L, fileName, false);
         when(addImageCommandHandler.handle(any())).thenReturn(CompletableFuture.completedFuture(dto));
 
         mockMvc.perform(multipart("/api/Image/item/" + itemId)
@@ -56,7 +56,7 @@ public class ImageControllerTest {
                 .andExpect(request().asyncStarted())
                 .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(10L))
+                .andExpect(jsonPath("$.id").value(999L))
                 .andExpect(jsonPath("$.path").value(fileName));
     }
 

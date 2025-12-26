@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,15 +52,14 @@ public class ImageController extends BaseController {
     }
 
     @PostMapping(value = "/item/{itemId}", consumes = {"multipart/form-data"})
-    public CompletableFuture<ResponseEntity<ImageDto>> add(@PathVariable Long itemId, @RequestBody AddImageCommand command, @RequestParam("file") MultipartFile file) {
+    public CompletableFuture<ResponseEntity<ImageDto>> add(@PathVariable Long itemId, @RequestParam("file") MultipartFile file) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                AddImageCommand commandWithStream = AddImageCommand.withStream(file.getInputStream(), command);
-                return commandWithStream;
+                return new AddImageCommand(itemId, file.getOriginalFilename(), file.getInputStream());
             } catch (IOException e) {
                 throw new RuntimeException("Failed to read uploaded file", e);
             }
-        }).thenCompose(cmd -> addImageCommandHandler.handle(AddImageCommand.withId(itemId, cmd)))
+        }).thenCompose(addImageCommandHandler::handle)
           .thenApply(ResponseEntity::ok);
     }
 
