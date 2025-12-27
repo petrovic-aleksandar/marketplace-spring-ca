@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import me.aco.marketplace_spring_ca.application.dto.TransferDto;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
+import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.domain.entities.transfers.PaymentTransfer;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaTransferRepository;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
@@ -26,22 +27,31 @@ public class AddPaymentCommandHandler {
 
     public CompletableFuture<TransferDto> handle(AddPaymentCommand command) {
         return CompletableFuture.supplyAsync(() -> {
-            var user = userRepository.findById(command.userId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+            validateCommand(command);
+
+            var user = fetchUser(command.userId());
             
-            // Process payment
             PaymentTransfer transfer = new PaymentTransfer();
             transfer.setUser(user);
-            transfer.setAmount(BigDecimal.valueOf(command.amount()));
+            transfer.setAmount(command.amount());
 
-            // Update balance
-            user.addBalance(BigDecimal.valueOf(command.amount()));
+            user.addBalance(command.amount());
 
-            // Save transfer and update user
             transferRepository.save(transfer);
             userRepository.save(user);
 
             return new TransferDto(transfer);
         });
+    }
+
+    private void validateCommand(AddPaymentCommand command) {
+        if (command.amount().compareTo(BigDecimal.ZERO) <= 0)
+            throw new IllegalArgumentException("Amount must be greater than zero");
+    }
+
+    private User fetchUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 }

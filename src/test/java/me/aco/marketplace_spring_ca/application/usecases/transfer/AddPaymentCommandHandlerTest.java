@@ -1,8 +1,16 @@
 package me.aco.marketplace_spring_ca.application.usecases.transfer;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.aspectj.lang.annotation.Before;
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.concurrent.CompletionException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,8 +18,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import me.aco.marketplace_spring_ca.application.dto.TransferDto;
+import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
 import me.aco.marketplace_spring_ca.application.usecases.transfer.command.AddPaymentCommand;
 import me.aco.marketplace_spring_ca.application.usecases.transfer.command.AddPaymentCommandHandler;
+import me.aco.marketplace_spring_ca.domain.entities.User;
+import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaTransferRepository;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
@@ -24,34 +36,75 @@ public class AddPaymentCommandHandlerTest {
     private JpaUserRepository userRepository;
 
     @InjectMocks
-    private AddPaymentCommandHandler handler;
+    private AddPaymentCommandHandler addPaymentCommandHandler;
 
-    private AddPaymentCommand validAddPaymentCommand;
+    private User user;
 
     @BeforeEach
     void setUp() {
-        
-        validAddPaymentCommand = new AddPaymentCommand(
+        user = new User(
             1L,
-            100.0
+            "buyerUsername",
+            "hashedPassword",
+            "Buyer Name",
+            "buyer@email.com",
+            "1234567890",
+            new BigDecimal("200.00"),
+            UserRole.USER,
+            true,
+            null,
+            null,
+            java.time.LocalDateTime.now()
         );
     }
 
     @Test
-    void testHandleValidCommand() {
-        
+    void handle_shouldAddPaymentAndReturnTransferDto() throws Exception {
+
         // Arrange
-        when(userRepository.findById(1L)).thenReturn(java.util.Optional.ofNullable(null)); // Mock user retrieval
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        AddPaymentCommand command = new AddPaymentCommand(1L, new BigDecimal("100.0"));
+
+        // Act
+        TransferDto result = addPaymentCommandHandler.handle(command).get();
+
+        // Assert
+        assertNotNull(result);
+        verify(transferRepository).save(any());
+        verify(userRepository).save(user);
+        assertEquals(new BigDecimal("300.00"), user.getBalance());
     }
 
     @Test
-    void testItemNotFound() {
-        // Implement test for item not found scenario
+    void handle_shouldThrowResourceNotFoundException_whenUserNotFound() {
+
+        // Arrange
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        AddPaymentCommand command = new AddPaymentCommand(1L, new BigDecimal("100.0"));
+
+
+        // Act & Assert
+        CompletionException thrown = assertThrows(
+            CompletionException.class,
+            () -> addPaymentCommandHandler.handle(command).join()
+        );
+        assertNotNull(thrown.getCause());
+        assertThrows(ResourceNotFoundException.class, () -> { throw thrown.getCause(); });
     }
 
     @Test
-    void testUserNotFound() {
-        // Implement test for insufficient balance scenario
+    void handle_shouldThrowIllegalArgumentException_whenAmountIsNegative() {
+
+        // Arrange
+        AddPaymentCommand command = new AddPaymentCommand(1L, new BigDecimal("-50.0"));
+
+        // Act & Assert
+        CompletionException thrown = assertThrows(
+            CompletionException.class,
+            () -> addPaymentCommandHandler.handle(command).join()
+        );
+        assertNotNull(thrown.getCause());
+        assertThrows(IllegalArgumentException.class, () -> { throw thrown.getCause(); });
     }
 
 
