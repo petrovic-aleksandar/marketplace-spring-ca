@@ -35,36 +35,46 @@ public class PurchaseItemCommandHandler {
         return CompletableFuture.supplyAsync(() -> {
 
             // Fetch buyer and item with seller
-            var buyer = userRepository.findById(command.buyerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Buyer not found"));
-            var item = itemRepository.findById(command.itemId())
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
-
+            User buyer = fetchBuyer(command.buyerId());
+            Item item = fetchItem(command.itemId());
+            
             // Business validations
             validatePurchase(buyer, item);
 
-            // Process purchase
+            // Purchase
+            User originalSeller = item.getSeller();
             PurchaseTransfer transfer = new PurchaseTransfer();
             transfer.setBuyer(buyer);
-            transfer.setSeller(item.getSeller());
+            transfer.setSeller(originalSeller);
             transfer.setItem(item);
             transfer.setAmount(item.getPrice());
 
             // Update balances
             buyer.deductBalance(item.getPrice());
-            item.getSeller().addBalance(item.getPrice());
+            originalSeller.addBalance(item.getPrice());
 
-            // Deactivate item
+            // Transfer ownership and deactivate item
+            item.setSeller(buyer);
             item.deactivate();
 
-            // Save transfer and update users
-            transferRepository.save(transfer);
+            // Save all changes
             userRepository.save(buyer);
-            userRepository.save(item.getSeller());
+            userRepository.save(originalSeller);
             itemRepository.save(item);
+            transferRepository.save(transfer);
 
             return new TransferDto(transfer);
         });
+    }
+
+    private User fetchBuyer(Long buyerId) {
+        return userRepository.findById(buyerId)
+            .orElseThrow(() -> new ResourceNotFoundException("Buyer not found"));
+    }
+
+    private Item fetchItem(Long itemId) {
+        return itemRepository.findById(itemId)
+            .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
     }
 
     private void validatePurchase(User buyer, Item item) {

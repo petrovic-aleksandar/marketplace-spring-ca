@@ -22,7 +22,7 @@ import me.aco.marketplace_spring_ca.application.usecases.transfer.query.GetTrans
 import me.aco.marketplace_spring_ca.application.usecases.transfer.query.GetTransfersByUserQueryHandler;
 
 @RestController
-@RequestMapping("/api/transfers")
+@RequestMapping("/api/Transfer")
 public class TransfersController extends BaseController {
 
     private final GetTransfersByUserQueryHandler getTransfersByUserQueryHandler;
@@ -42,7 +42,7 @@ public class TransfersController extends BaseController {
         this.purchaseItemCommandHandler = purchaseItemCommandHandler;
     }
 
-    @GetMapping("/user/{id}")
+    @GetMapping("/byUserId/{id}")
     public CompletableFuture<ResponseEntity<List<TransferDto>>> getByUserId(@PathVariable Long id) {
         return getTransfersByUserQueryHandler.handle(new GetTransfersByUserQuery(id))
             .thenApply(ResponseEntity::ok);
