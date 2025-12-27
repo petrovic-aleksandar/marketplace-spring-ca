@@ -37,7 +37,7 @@ public class PurchaseItemCommandHandler {
             // Fetch buyer and item with seller
             User buyer = fetchBuyer(command.buyerId());
             Item item = fetchItem(command.itemId());
-            
+
             // Business validations
             validatePurchase(buyer, item);
 
@@ -84,5 +84,7 @@ public class PurchaseItemCommandHandler {
                 throw new BusinessException("Item has been deleted");
         if (buyer.getBalance().compareTo(item.getPrice()) < 0)
                 throw new BusinessException("Insufficient balance");
+        if (item.getSeller().getId().equals(buyer.getId()))
+                throw new BusinessException("Cannot purchase one's own item");
     }
 }
