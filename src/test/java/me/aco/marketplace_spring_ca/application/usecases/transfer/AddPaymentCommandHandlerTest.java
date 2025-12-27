@@ -1,5 +1,7 @@
 package me.aco.marketplace_spring_ca.application.usecases.transfer;
 
+import static org.mockito.Mockito.when;
+
 import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,8 +39,21 @@ public class AddPaymentCommandHandlerTest {
 
     @Test
     void testHandleValidCommand() {
-        // Implement test logic here
+        
+        // Arrange
+        when(userRepository.findById(1L)).thenReturn(java.util.Optional.ofNullable(null)); // Mock user retrieval
     }
+
+    @Test
+    void testItemNotFound() {
+        // Implement test for item not found scenario
+    }
+
+    @Test
+    void testUserNotFound() {
+        // Implement test for insufficient balance scenario
+    }
+
 
      
 }
