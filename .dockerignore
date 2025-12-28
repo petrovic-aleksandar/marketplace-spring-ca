@@ -1,0 +1,9 @@
+target/
+*.iml
+.idea/
+*.log
+*.md
+*.bat
+*.sh
+*.db
+*.DS_Store
