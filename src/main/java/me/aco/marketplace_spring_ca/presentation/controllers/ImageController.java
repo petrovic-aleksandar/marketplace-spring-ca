@@ -45,13 +45,13 @@ public class ImageController extends BaseController {
         this.deleteImageCommandHandler = deleteImageCommandHandler;
     }
 
-    @GetMapping("/item/{itemId}")
+    @GetMapping("{itemId}")
     public CompletableFuture<ResponseEntity<List<ImageDto>>> getByItemId(@PathVariable Long itemId) {
         return getImagesByItemQueryHandler.handle(new GetImagesByItemQuery(itemId))
             .thenApply(ResponseEntity::ok);
     }
 
-    @PostMapping(value = "/item/{itemId}", consumes = {"multipart/form-data"})
+    @PostMapping(value = "{itemId}", consumes = {"multipart/form-data"})
     public CompletableFuture<ResponseEntity<ImageDto>> add(@PathVariable Long itemId, @RequestParam("file") MultipartFile file) {
         return CompletableFuture.supplyAsync(() -> {
             try {

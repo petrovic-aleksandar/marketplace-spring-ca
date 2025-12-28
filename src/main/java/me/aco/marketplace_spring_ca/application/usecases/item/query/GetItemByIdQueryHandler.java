@@ -21,7 +21,7 @@ public class GetItemByIdQueryHandler {
     }
 
     public CompletableFuture<ItemDto> handle(GetItemByIdQuery query) {
-        return CompletableFuture.supplyAsync(() -> itemRepository.findById(query.id())
+        return CompletableFuture.supplyAsync(() -> itemRepository.findByIdWithImages(query.id())
                 .map(ItemDto::new)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found")));
     }

@@ -92,7 +92,7 @@ public class UploadImgMakeFrontAndDelete {
         String fileName = "test.jpg";
         MockMultipartFile file = new MockMultipartFile("file", fileName, MediaType.IMAGE_JPEG_VALUE, "dummy".getBytes());
 
-        mockMvc.perform(multipart("/api/Image/item/" + createdItemOpt.get().getId())
+        mockMvc.perform(multipart("/api/Image/" + createdItemOpt.get().getId())
                 .file(file)
                 .param("fileName", fileName))
             .andExpect(status().isOk())
