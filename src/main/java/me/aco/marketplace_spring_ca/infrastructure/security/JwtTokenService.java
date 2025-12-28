@@ -65,4 +65,16 @@ public class JwtTokenService implements TokenService {
 		}
 	}
     
+	public String extractUsername(String token) {
+		try {
+			return com.auth0.jwt.JWT.decode(token).getClaim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name").asString();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	public boolean isTokenValid(String token, org.springframework.security.core.userdetails.UserDetails userDetails) {
+		String username = extractUsername(token);
+		return username != null && username.equals(userDetails.getUsername()) && validateToken(token);
+	}
 }
