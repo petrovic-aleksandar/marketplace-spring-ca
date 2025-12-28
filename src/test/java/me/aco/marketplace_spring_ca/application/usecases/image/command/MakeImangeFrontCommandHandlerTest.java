@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,7 +46,7 @@ class MakeImangeFrontCommandHandlerTest {
         oldFront.setItem(item);
         oldFront.setFront(true);
         when(imageRepository.findById(imageId)).thenReturn(Optional.of(image));
-        when(imageRepository.findFrontImageByItemId(itemId)).thenReturn(Optional.of(oldFront));
+        when(imageRepository.findByItemAndFrontTrue(item)).thenReturn(Optional.of(oldFront));
         when(imageRepository.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
@@ -54,7 +55,7 @@ class MakeImangeFrontCommandHandlerTest {
 
         // Assert
         verify(imageRepository).findById(imageId);
-        verify(imageRepository).findFrontImageByItemId(itemId);
+        verify(imageRepository).findByItemAndFrontTrue(item);
         verify(imageRepository, times(2)).save(any(Image.class));
         assertTrue(dto.front());
     }
