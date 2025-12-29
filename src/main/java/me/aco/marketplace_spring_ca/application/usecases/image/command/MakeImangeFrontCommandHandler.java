@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import me.aco.marketplace_spring_ca.application.dto.ImageDto;
 import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
+import me.aco.marketplace_spring_ca.domain.entities.Item;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaImageRepository;
 
 @Service
@@ -30,7 +31,7 @@ public class MakeImangeFrontCommandHandler {
                 throw new BusinessException("Image is already front");
             }
 
-            demoteCurrentFrontImage(image.getItem().getId());
+            demoteCurrentFrontImage(image.getItem());
 
             image.setFront(true);
             imageRepository.save(image);
@@ -38,8 +39,8 @@ public class MakeImangeFrontCommandHandler {
         });
     }
 
-    private void demoteCurrentFrontImage(Long itemId) {
-        imageRepository.findFrontImageByItemId(itemId).ifPresent(frontImage -> {
+    private void demoteCurrentFrontImage(Item item) {
+        imageRepository.findByItemAndFrontTrue(item).ifPresent(frontImage -> {
             frontImage.setFront(false);
             imageRepository.save(frontImage);
         });

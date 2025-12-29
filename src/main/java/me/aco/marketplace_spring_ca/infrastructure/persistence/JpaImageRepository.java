@@ -11,6 +11,5 @@ import java.util.Optional;
 @Repository
 public interface JpaImageRepository extends JpaRepository<Image, Long> {
     List<Image> findByItemId(Long itemId);
-    Optional<Image> findFrontImageByItemId(Long itemId);
     Optional<Image> findByItemAndFrontTrue(Item item);
 }

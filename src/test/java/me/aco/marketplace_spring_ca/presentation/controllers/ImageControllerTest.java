@@ -50,7 +50,7 @@ public class ImageControllerTest {
         ImageDto dto = new ImageDto(999L, fileName, false);
         when(addImageCommandHandler.handle(any())).thenReturn(CompletableFuture.completedFuture(dto));
 
-        mockMvc.perform(multipart("/api/Image/item/" + itemId)
+        mockMvc.perform(multipart("/api/Image/" + itemId)
                     .file(file)
                     .param("fileName", fileName))
                 .andExpect(request().asyncStarted())

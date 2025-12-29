@@ -27,7 +27,7 @@ public class Item {
     @Column(nullable = false)
     private BigDecimal price;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "item_type_id", nullable = false)
     private ItemType type;
 
@@ -37,7 +37,7 @@ public class Item {
     @Column(nullable = false)
     private boolean deleted;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
 
@@ -204,7 +204,6 @@ public class Item {
     // Domain logic methods
     public void activate() {
         this.active = true;
-        this.deleted = false;
     }
 
     public void deactivate() {
@@ -213,6 +212,5 @@ public class Item {
 
     public void softDelete() {
         this.deleted = true;
-        this.active = false;
     }
 }

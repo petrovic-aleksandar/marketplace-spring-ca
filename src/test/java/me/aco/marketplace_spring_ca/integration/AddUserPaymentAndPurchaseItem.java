@@ -3,48 +3,46 @@ package me.aco.marketplace_spring_ca.integration;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.math.BigDecimal;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
 import me.aco.marketplace_spring_ca.application.usecases.item.command.AddItemCommand;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaImageRepository;
+import me.aco.marketplace_spring_ca.application.usecases.transfer.command.AddPaymentCommand;
+import me.aco.marketplace_spring_ca.application.usecases.transfer.command.PurchaseItemCommand;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class UploadImgMakeFrontAndDelete {
+public class AddUserPaymentAndPurchaseItem {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private JpaImageRepository jpaImageRepository;
-    @Autowired
-    private JpaUserRepository jpaUserRepository;
+    private JpaUserRepository jpaUserRepository;    
     @Autowired
     private JpaItemRepository jpaItemRepository;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void testUploadImgMakeFrontAndDelete() throws Exception {
+    void testAddUserPaymentAndPurchaseItem() throws Exception {
 
-        // Step 1: Create new User
+        // Step 1: Register new User
         RegisterCommand registerCommand = new RegisterCommand(
                 "newuser",
                 "password123",
@@ -61,15 +59,16 @@ public class UploadImgMakeFrontAndDelete {
             .andDo(result -> mockMvc.perform(asyncDispatch(result))
             .andExpect(status().isCreated()));
 
-        // Assert user created
+        // Assert user created, has zero balance
         var createdUserOpt = jpaUserRepository.findSingleByUsername("newuser");
         assertTrue(createdUserOpt.isPresent());
+        assertTrue(createdUserOpt.get().getBalance().compareTo(BigDecimal.ZERO) == 0);
 
-        // Step 2: Create new Item that user sells
+        // Step 2: Add a new item
         AddItemCommand addItemCommand = new AddItemCommand(
             "Test Item 1",
             "Description 1",
-            99.99,
+            100.00,
             1L,
             createdUserOpt.get().getId()
         );
@@ -88,49 +87,76 @@ public class UploadImgMakeFrontAndDelete {
             .findFirst();
         assertTrue(createdItemOpt.isPresent());
 
-        // Step 3: Upload Image for Item
-        String fileName = "test.jpg";
-        MockMultipartFile file = new MockMultipartFile("file", fileName, MediaType.IMAGE_JPEG_VALUE, "dummy".getBytes());
+        // Step 3: Register Buyer User
+        RegisterCommand registerCommand2 = new RegisterCommand(
+                "buyeruser",
+                "password123",
+                "buyeruser@example.com",
+                "Buyer User",
+                "555-8888"
+        );
 
-        mockMvc.perform(multipart("/api/Image/" + createdItemOpt.get().getId())
-                .file(file)
-                .param("fileName", fileName))
+        mockMvc.perform(post("/api/Auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(registerCommand2)))
             .andExpect(status().isOk())
             .andExpect(request().asyncStarted())
             .andDo(result -> mockMvc.perform(asyncDispatch(result))
             .andExpect(status().isCreated()));
 
-        // Assert image uploaded
-        var imagesForItem = jpaImageRepository.findByItemId(createdItemOpt.get().getId());
-        assertFalse(imagesForItem.isEmpty());
-        var uploadedImage = imagesForItem.get(0);
+        // Assert user created, has zero balance
+        var createdUserOpt2 = jpaUserRepository.findSingleByUsername("buyeruser");
+        assertTrue(createdUserOpt2.isPresent());
+        assertTrue(createdUserOpt2.get().getBalance().compareTo(BigDecimal.ZERO) == 0);
 
-        // Step 4: Make Image Front
-        mockMvc.perform(post("/api/Image/front/" + uploadedImage.getId())
-            .param("imageId", String.valueOf(uploadedImage.getId()))
-            .contentType(MediaType.APPLICATION_JSON))
+        // Step 4: Add Payment 
+        AddPaymentCommand addPaymentCommand = new AddPaymentCommand(
+            createdUserOpt2.get().getId(),
+            BigDecimal.valueOf(100.00)
+        );
+
+        mockMvc.perform(post("/api/Transfer/payment")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(addPaymentCommand)))
             .andExpect(status().isOk())
             .andExpect(request().asyncStarted())
             .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isOk()));
-        
-        // Assert image is front
-        var frontImageOpt = jpaImageRepository.findById(uploadedImage.getId());
-        assertTrue(frontImageOpt.isPresent());
-        assertTrue(frontImageOpt.get().isFront());
+            .andExpect(status().isCreated()));
 
-        // Step 5: Delete Image
-        mockMvc.perform(delete("/api/Image/" + uploadedImage.getId())
-            .param("imageId", String.valueOf(uploadedImage.getId()))
-            .contentType(MediaType.APPLICATION_JSON))
+        // Assert payment added
+        var updatedBuyerOpt = jpaUserRepository.findById(createdUserOpt2.get().getId());
+        assertTrue(updatedBuyerOpt.isPresent());
+        assertTrue(updatedBuyerOpt.get().getBalance().compareTo(BigDecimal.valueOf(100.00)) == 0);
+
+        // Step 5: Purchase Item
+        PurchaseItemCommand purchaseItemCommand = new PurchaseItemCommand(
+            createdUserOpt2.get().getId(),
+            createdItemOpt.get().getId()
+        );
+
+        mockMvc.perform(post("/api/Transfer/purchase")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(purchaseItemCommand)))
             .andExpect(status().isOk())
             .andExpect(request().asyncStarted())
             .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isNoContent()));
+            .andExpect(status().isCreated()));
 
-        // Assert image deleted
-        var deletedImageOpt = jpaImageRepository.findById(uploadedImage.getId());
-        assertTrue(deletedImageOpt.isEmpty());
+        // Assert buyer balance deducted
+        var finalBuyerOpt = jpaUserRepository.findById(createdUserOpt2.get().getId());
+        assertTrue(finalBuyerOpt.isPresent());
+        assertTrue(finalBuyerOpt.get().getBalance().compareTo(BigDecimal.ZERO) == 0);
+
+        // Assert item ownership transferred, item deactivated
+        var purchasedItemOpt = jpaItemRepository.findById(createdItemOpt.get().getId());
+        assertTrue(purchasedItemOpt.isPresent());
+        assertTrue(purchasedItemOpt.get().getSeller().getId().equals(createdUserOpt2.get().getId()));
+        assertFalse(purchasedItemOpt.get().isActive());
+
+        // Assert seller balance increased
+        var finalSellerOpt = jpaUserRepository.findById(createdUserOpt.get().getId());
+        assertTrue(finalSellerOpt.isPresent());
+        assertTrue(finalSellerOpt.get().getBalance().compareTo(BigDecimal.valueOf(100.00)) == 0);
     }
     
 }

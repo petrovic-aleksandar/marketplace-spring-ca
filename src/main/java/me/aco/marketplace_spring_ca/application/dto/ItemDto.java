@@ -1,10 +1,9 @@
 package me.aco.marketplace_spring_ca.application.dto;
 
-import me.aco.marketplace_spring_ca.domain.entities.Image;
+import java.time.format.DateTimeFormatter;
+
 import me.aco.marketplace_spring_ca.domain.entities.Item;
 import me.aco.marketplace_spring_ca.domain.entities.ItemType;
-
-import java.time.format.DateTimeFormatter;
 
 public record ItemDto(
     Long id,
@@ -16,7 +15,7 @@ public record ItemDto(
         boolean deleted,
         String createdAt,
         UserDto seller,
-        Image frontImage
+        ImageDto frontImage
 ) {
     private static final DateTimeFormatter ISO_INSTANT_NO_MILLIS = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
@@ -32,6 +31,21 @@ public record ItemDto(
                 item.getCreatedAt() != null ? item.getCreatedAt().format(ISO_INSTANT_NO_MILLIS) : "",
                 new UserDto(item.getSeller()),
                 null
+        );
+    }
+
+    public ItemDto(Item item, ImageDto frontImage) {
+        this(
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.getPrice().doubleValue(),
+                item.getType(),
+                item.isActive(),
+                false,
+                item.getCreatedAt() != null ? item.getCreatedAt().format(ISO_INSTANT_NO_MILLIS) : "",
+                new UserDto(item.getSeller()),
+                frontImage
         );
     }
 }
