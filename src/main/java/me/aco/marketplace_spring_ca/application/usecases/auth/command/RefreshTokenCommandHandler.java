@@ -1,67 +1,74 @@
 package me.aco.marketplace_spring_ca.application.usecases.auth.command;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.CompletableFuture;
-
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
 import me.aco.marketplace_spring_ca.application.dto.TokenDto;
+import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
+import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
+import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.domain.intefrace.RefreshTokenService;
 import me.aco.marketplace_spring_ca.domain.intefrace.TokenService;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class RefreshTokenCommandHandler {
 
-    private JpaUserRepository userRepository;
-    private RefreshTokenService refreshTokenService;
-    private TokenService tokenService;
+    private final JpaUserRepository userRepository;
+    private final RefreshTokenService refreshTokenService;
+    private final TokenService tokenService;
 
-    public RefreshTokenCommandHandler(JpaUserRepository userRepository,
-            RefreshTokenService refreshTokenService,
-            TokenService tokenService) {
-        this.userRepository = userRepository;
-        this.refreshTokenService = refreshTokenService;
-        this.tokenService = tokenService;
+    public TokenDto handle(RefreshTokenCommand command) {
+        User user = fetchUser(command.userId());
+
+        validateTokenIgnoringExpiration(command.accessToken());
+
+        if (isAccessTokenExpired(command.accessToken()))
+            validateRefreshToken(command.refreshToken(), user);
+
+        String newAccessToken = tokenService.generateToken(user);
+        String newRefreshToken = refreshTokenService.generateRefreshToken();
+
+        user.setRefreshToken(newRefreshToken);
+        user.setRefreshTokenExpiry(LocalDateTime.now().plusDays(1));
+        userRepository.save(user);
+
+        return new TokenDto(newAccessToken, newRefreshToken);
     }
 
-    public CompletableFuture<TokenDto> handle(RefreshTokenCommand command) {
-        // Validate access token (allow expired)
-        if (!tokenService.validateTokenIgnoringExpiration(command.accessToken())) {
-            throw new IllegalArgumentException("Invalid access token");
-        }
-        
-        return CompletableFuture.supplyAsync(() -> 
-            userRepository.findById(command.userId())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"))
-        ).thenCompose(user -> {
-            // Validate refresh token
-            if (user.getRefreshToken() == null || 
-                !user.getRefreshToken().equals(command.refreshToken())) {
-                throw new IllegalArgumentException("Invalid refresh token");
-            }
-            
-            // Check if refresh token is expired
-            if (user.getRefreshTokenExpiry() == null || 
-                user.getRefreshTokenExpiry().isBefore(LocalDateTime.now())) {
-                throw new IllegalArgumentException("Refresh token expired");
-            }
-            
-            // Generate new tokens (rotate refresh token)
-            String newAccessToken = tokenService.generateToken(user);
-            String newRefreshToken = refreshTokenService.generateRefreshToken();
-            
-            user.setRefreshToken(newRefreshToken);
-            user.setRefreshTokenExpiry(LocalDateTime.now().plusDays(1));
-            
-            return CompletableFuture.supplyAsync(() -> {
-                userRepository.save(user);
-                return new TokenDto(newAccessToken, newRefreshToken);
-            });
-        });
+    private User fetchUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
-    
+
+    private void validateTokenIgnoringExpiration(String accessToken) {
+        if (accessToken == null || accessToken.isEmpty())
+            throw new IllegalArgumentException("Access token cannot be null or empty");
+
+        if (!tokenService.validateTokenIgnoringExpiration(accessToken))
+            throw new BusinessException("Invalid access token");
+    }
+
+    private boolean isAccessTokenExpired(String token) {
+        return tokenService.isTokenExpired(token);
+    }
+
+    private void validateRefreshToken(String refreshToken, User user) {
+        if (refreshToken == null || refreshToken.isEmpty())
+            throw new IllegalArgumentException("Refresh token cannot be null or empty");
+
+        if (user.getRefreshToken() == null ||
+                !user.getRefreshToken().equals(refreshToken))
+            throw new BusinessException("Invalid refresh token");
+
+        if (user.getRefreshTokenExpiry() == null ||
+                user.getRefreshTokenExpiry().isBefore(LocalDateTime.now()))
+            throw new BusinessException("Refresh token expired");
+    }
+
 }

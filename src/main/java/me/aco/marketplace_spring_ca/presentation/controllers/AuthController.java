@@ -55,14 +55,12 @@ public class AuthController extends BaseController {
     }
 
     @PostMapping(value = "/refresh-token")
-    public CompletableFuture<ResponseEntity<TokenDto>> refreshToken(@RequestBody RefreshTokenCommand command) {
-        return refreshTokenCommandHandler.handle(command)
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<TokenDto> refreshToken(@RequestBody RefreshTokenCommand command) {
+        return ResponseEntity.ok(refreshTokenCommandHandler.handle(command));
     }
 
     @PostMapping(value = "/revoke-token")
-    public CompletableFuture<ResponseEntity<Long>> revokeToken(@RequestBody RevokeTokenCommand command) {
-        return revokeTokenCommandHandler.handle(command)
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<Long> revokeToken(@RequestBody RevokeTokenCommand command) {
+        return ResponseEntity.ok(revokeTokenCommandHandler.handle(command));
     }
 }

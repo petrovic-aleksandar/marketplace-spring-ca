@@ -179,16 +179,12 @@ class AuthControllerTest {
                 "refresh-token-456"
         );
         TokenDto newTokenDto = new TokenDto("new-access-token-789", "new-refresh-token-012");
-        
-        when(refreshTokenCommandHandler.handle(any(RefreshTokenCommand.class)))
-                .thenReturn(CompletableFuture.completedFuture(newTokenDto));
+        when(refreshTokenCommandHandler.handle(any(RefreshTokenCommand.class))).thenReturn(newTokenDto);
 
         // Act & Assert
         mockMvc.perform(post("/api/Auth/refresh-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(refreshCommand)))
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("new-access-token-789"))
                 .andExpect(jsonPath("$.refreshToken").value("new-refresh-token-012"));
@@ -202,19 +198,13 @@ class AuthControllerTest {
                 "invalid-access-token",
                 "invalid-token"
         );
-        
-        CompletableFuture<TokenDto> failedFuture = new CompletableFuture<>();
-        failedFuture.completeExceptionally(new IllegalArgumentException("User not found"));
-        
         when(refreshTokenCommandHandler.handle(any(RefreshTokenCommand.class)))
-                .thenReturn(failedFuture);
+                .thenThrow(new IllegalArgumentException("User not found"));
 
         // Act & Assert
         mockMvc.perform(post("/api/Auth/refresh-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(refreshCommand)))
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -223,16 +213,12 @@ class AuthControllerTest {
         // Arrange
         RevokeTokenCommand revokeCommand = new RevokeTokenCommand(1L);
         Long userId = 1L;
-        
-        when(revokeTokenCommandHandler.handle(any(RevokeTokenCommand.class)))
-                .thenReturn(CompletableFuture.completedFuture(userId));
+        when(revokeTokenCommandHandler.handle(any(RevokeTokenCommand.class))).thenReturn(userId);
 
         // Act & Assert
         mockMvc.perform(post("/api/Auth/revoke-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(revokeCommand)))
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isOk())
                 .andExpect(content().string("1"));
     }
@@ -241,19 +227,13 @@ class AuthControllerTest {
     void testRevokeTokenFailure_InvalidUserId() throws Exception {
         // Arrange
         RevokeTokenCommand revokeCommand = new RevokeTokenCommand(999L);
-        
-        CompletableFuture<Long> failedFuture = new CompletableFuture<>();
-        failedFuture.completeExceptionally(new IllegalArgumentException("User not found"));
-        
         when(revokeTokenCommandHandler.handle(any(RevokeTokenCommand.class)))
-                .thenReturn(failedFuture);
+                .thenThrow(new IllegalArgumentException("User not found"));
 
         // Act & Assert
         mockMvc.perform(post("/api/Auth/revoke-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(revokeCommand)))
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isBadRequest());
     }
 }

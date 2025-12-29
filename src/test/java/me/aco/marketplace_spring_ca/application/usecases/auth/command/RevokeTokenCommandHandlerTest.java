@@ -1,5 +1,6 @@
 package me.aco.marketplace_spring_ca.application.usecases.auth.command;
 
+import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
@@ -13,8 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,78 +49,53 @@ class RevokeTokenCommandHandlerTest {
     }
 
     @Test
-    void testRevokeTokenSuccess() throws ExecutionException, InterruptedException {
-
+    void testRevokeTokenSuccess() {
         // Arrange
         RevokeTokenCommand command = new RevokeTokenCommand(1L);
-        
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // Act
-        CompletableFuture<Long> result = revokeTokenCommandHandler.handle(command);
-        Long userId = result.get();
+        Long userId = revokeTokenCommandHandler.handle(command);
 
         // Assert
         assertNotNull(userId, "User ID should not be null");
         assertEquals(1L, userId, "User ID should match");
         assertNull(testUser.getRefreshToken(), "Refresh token should be null after revocation");
-        
         verify(userRepository, times(1)).findById(1L);
         verify(userRepository, times(1)).save(testUser);
     }
 
     @Test
     void testRevokeTokenFailure_UserNotFound() {
-
         // Arrange
         RevokeTokenCommand command = new RevokeTokenCommand(999L);
-        
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // Act
-        CompletableFuture<Long> result = revokeTokenCommandHandler.handle(command);
-
-        // Assert
-        assertThrows(ExecutionException.class, () -> {
-            result.get();
-        }, "Should throw ExecutionException for non-existing user");
-
-        // Verify the cause is IllegalArgumentException
-        try {
-            result.get();
-        } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof IllegalArgumentException, 
-                    "Cause should be IllegalArgumentException");
-            assertEquals("User not found", e.getCause().getMessage(), 
-                    "Error message should be 'User not found'");
-        } catch (InterruptedException e) {
-            fail("Should not be interrupted");
-        }
-
+        // Act & Assert
+        ResourceNotFoundException thrown = assertThrows(ResourceNotFoundException.class, () -> {
+            revokeTokenCommandHandler.handle(command);
+        }, "Should throw IllegalArgumentException for non-existing user");
+        assertEquals("User not found", thrown.getMessage(), "Error message should be 'User not found'");
         verify(userRepository, times(1)).findById(999L);
         verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void testRevokeTokenAlreadyNull() throws ExecutionException, InterruptedException {
-        
+    void testRevokeTokenAlreadyNull() {
         // Arrange
         testUser.setRefreshToken(null); // Already null
         RevokeTokenCommand command = new RevokeTokenCommand(1L);
-        
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // Act
-        CompletableFuture<Long> result = revokeTokenCommandHandler.handle(command);
-        Long userId = result.get();
+        Long userId = revokeTokenCommandHandler.handle(command);
 
         // Assert
         assertNotNull(userId, "User ID should not be null");
         assertEquals(1L, userId, "User ID should match");
         assertNull(testUser.getRefreshToken(), "Refresh token should remain null");
-        
         verify(userRepository, times(1)).findById(1L);
         verify(userRepository, times(1)).save(testUser);
     }

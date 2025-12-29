@@ -64,5 +64,16 @@ public class JwtTokenService implements TokenService {
 			return false;
 		}
 	}
+
+	public boolean isTokenExpired(String token) {
+		try {
+			com.auth0.jwt.interfaces.DecodedJWT jwt = JWT.decode(token);
+			Instant expiresAt = jwt.getExpiresAt().toInstant();
+			return expiresAt.isBefore(Instant.now());
+		} catch (JWTVerificationException exception) {
+			// If token is invalid or missing expiration, treat as expired
+			return true;
+		}
+	}
     
 }
