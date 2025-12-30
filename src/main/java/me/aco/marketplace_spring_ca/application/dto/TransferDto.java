@@ -12,9 +12,9 @@ public record TransferDto(
     BigDecimal amount,
     String time,
     String type,
-    UserDto buyer,
-    UserDto seller,
-    ItemDto item
+    String buyer,
+    String seller,
+    String item
 ){
     public TransferDto(Transfer transfer) {
         this(
@@ -22,9 +22,9 @@ public record TransferDto(
             transfer.getAmount(),
             transfer.getCreatedAt() != null ? transfer.getCreatedAt().toString() : "",
             transfer.getClass().getSimpleName().replace("Transfer", "").toUpperCase(),
-            transfer instanceof PurchaseTransfer pt ? new UserDto(pt.getBuyer()) : (transfer instanceof WithdrawalTransfer wt ? new UserDto(wt.getUser()) : null),
-            transfer instanceof PurchaseTransfer pt ? new UserDto(pt.getSeller()) : (transfer instanceof PaymentTransfer pyt ? new UserDto(pyt.getUser()) : null),
-            transfer instanceof PurchaseTransfer pt ? new ItemDto(pt.getItem()) : null
+            transfer instanceof PurchaseTransfer pt ? pt.getBuyer().getName() : (transfer instanceof WithdrawalTransfer wt ? wt.getUser().getName() : null),
+            transfer instanceof PurchaseTransfer pt ? pt.getSeller().getName() : (transfer instanceof PaymentTransfer pyt ? pyt.getUser().getName() : null),
+            transfer instanceof PurchaseTransfer pt ? pt.getItem().getName() : null
         );
     }
 }
