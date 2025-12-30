@@ -1,11 +1,15 @@
 package me.aco.marketplace_spring_ca.presentation.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import me.aco.marketplace_spring_ca.application.dto.TokenDto;
-import me.aco.marketplace_spring_ca.application.dto.UserDto;
-import me.aco.marketplace_spring_ca.application.usecases.auth.command.*;
-import me.aco.marketplace_spring_ca.domain.entities.User;
-import me.aco.marketplace_spring_ca.domain.enums.UserRole;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,16 +18,20 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
-import java.util.concurrent.CompletableFuture;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import me.aco.marketplace_spring_ca.application.dto.TokenDto;
+import me.aco.marketplace_spring_ca.application.dto.UserDto;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RefreshTokenCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RefreshTokenCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommandHandler;
+import me.aco.marketplace_spring_ca.domain.entities.User;
+import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 
 @WebMvcTest(AuthController.class)
 class AuthControllerTest {
@@ -81,16 +89,12 @@ class AuthControllerTest {
     void testLoginSuccess() throws Exception {
         // Arrange
         LoginCommand loginCommand = new LoginCommand("testuser", "password123");
-        
-        when(loginCommandHandler.handle(any(LoginCommand.class)))
-                .thenReturn(CompletableFuture.completedFuture(mockTokenDto));
+        when(loginCommandHandler.handle(any(LoginCommand.class))).thenReturn(mockTokenDto);
 
         // Act & Assert
         mockMvc.perform(post("/api/Auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginCommand)))
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("access-token-123"))
                 .andExpect(jsonPath("$.refreshToken").value("refresh-token-456"));
@@ -100,19 +104,13 @@ class AuthControllerTest {
     void testLoginFailure() throws Exception {
         // Arrange
         LoginCommand loginCommand = new LoginCommand("testuser", "wrongpassword");
-        
-        CompletableFuture<TokenDto> failedFuture = new CompletableFuture<>();
-        failedFuture.completeExceptionally(new me.aco.marketplace_spring_ca.application.exceptions.AuthenticationException("Invalid credentials"));
-        
         when(loginCommandHandler.handle(any(LoginCommand.class)))
-                .thenReturn(failedFuture);
+                .thenThrow(new me.aco.marketplace_spring_ca.application.exceptions.AuthenticationException("Invalid credentials"));
 
         // Act & Assert
         mockMvc.perform(post("/api/Auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginCommand)))
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -126,16 +124,12 @@ class AuthControllerTest {
                 "New User",
                 "555-9999"
         );
-        
-        when(registerCommandHandler.handle(any(RegisterCommand.class)))
-                .thenReturn(mockUserDto);
+        when(registerCommandHandler.handle(any(RegisterCommand.class))).thenReturn(mockUserDto);
 
         // Act & Assert
         mockMvc.perform(post("/api/Auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerCommand)))
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.username").value("testuser"))

@@ -1,12 +1,12 @@
 package me.aco.marketplace_spring_ca.application.usecases.auth.command;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.concurrent.CompletableFuture;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
 import me.aco.marketplace_spring_ca.application.dto.TokenDto;
 import me.aco.marketplace_spring_ca.application.exceptions.AuthenticationException;
 import me.aco.marketplace_spring_ca.domain.entities.User;
@@ -17,48 +17,52 @@ import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class LoginCommandHandler {
 
-    private static final int REFRESH_TOKEN_VALIDITY_DAYS = 1;
+    @Value("${security.refresh-token-validity-days}")
+    private final int refreshTokenValidityDays;
 
     private final JpaUserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
     private final TokenService tokenService;
     private final PasswordHasher passwordHasher;
 
-    public LoginCommandHandler(RefreshTokenService refreshTokenService, TokenService tokenService, JpaUserRepository userRepository, PasswordHasher passwordHasher) {
-        this.refreshTokenService = refreshTokenService;
-        this.tokenService = tokenService;
-        this.userRepository = userRepository;
-        this.passwordHasher = passwordHasher;
+    public TokenDto handle(LoginCommand command) {
+
+        validateCredentials(command);
+
+        User user = authenticate(command);
+
+        String accessToken = tokenService.generateToken(user);
+        String refreshToken = refreshTokenService.generateRefreshToken();
+        saveUser(user, refreshToken);
+
+        return new TokenDto(accessToken, refreshToken);
     }
 
-    public CompletableFuture<TokenDto> handle(LoginCommand command) {
-        return authenticate(command)
-            .thenCompose(user -> {
-                String accessToken = tokenService.generateToken(user);
-                String refreshToken = refreshTokenService.generateRefreshToken();
-                
-                user.setRefreshToken(refreshToken);
-                user.setRefreshTokenExpiry(LocalDateTime.now().plus(REFRESH_TOKEN_VALIDITY_DAYS, ChronoUnit.DAYS));
-                
-                return CompletableFuture.supplyAsync(() -> {
-                    userRepository.save(user);
-                    return new TokenDto(accessToken, refreshToken);
-                });
-            });
+    private void validateCredentials(LoginCommand command) {
+        if (command.username() == null || command.username().isEmpty())
+            throw new IllegalArgumentException("Username must be provided");
+
+        if (command.password() == null || command.password().isEmpty())
+            throw new IllegalArgumentException("Password must be provided");
     }
 
-    private CompletableFuture<User> authenticate(LoginCommand command) {
-        return CompletableFuture.supplyAsync(() -> {
-            User user = userRepository.findSingleByUsername(command.username())
+    private User authenticate(LoginCommand command) {
+        User user = userRepository.findSingleByUsername(command.username())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
-            if (!passwordHasher.verify(command.password(), user.getPassword()))
-                throw new AuthenticationException("Invalid credentials");
+        if (!passwordHasher.verify(command.password(), user.getPassword()))
+            throw new AuthenticationException("Invalid credentials");
 
-            return user;
-        });
+        return user;
     }
-    
+
+    private User saveUser(User user, String refreshToken) {
+        user.setRefreshToken(refreshToken);
+        user.setRefreshTokenExpiry(LocalDateTime.now().plusDays(refreshTokenValidityDays));
+        return userRepository.save(user);
+    }
+
 }

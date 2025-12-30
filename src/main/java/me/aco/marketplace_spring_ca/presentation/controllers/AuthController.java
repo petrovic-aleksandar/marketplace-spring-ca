@@ -1,7 +1,5 @@
 package me.aco.marketplace_spring_ca.presentation.controllers;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,10 +12,10 @@ import me.aco.marketplace_spring_ca.application.dto.TokenDto;
 import me.aco.marketplace_spring_ca.application.dto.UserDto;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommandHandler;
-import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
-import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RefreshTokenCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RefreshTokenCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommandHandler;
 
@@ -37,9 +35,8 @@ public class AuthController extends BaseController {
     }
 
     @PostMapping(value = "/login")
-    public CompletableFuture<ResponseEntity<TokenDto>> login(@RequestBody LoginCommand command) {
-        return loginCommandHandler.handle(command)
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<TokenDto> login(@RequestBody LoginCommand command) {
+        return ok(loginCommandHandler.handle(command));
     }
 
     @PostMapping(value = "/register")

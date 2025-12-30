@@ -2,6 +2,7 @@ package me.aco.marketplace_spring_ca.application.usecases.auth.command;
 
 import java.time.LocalDateTime;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,11 +20,15 @@ import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository
 @RequiredArgsConstructor
 public class RefreshTokenCommandHandler {
 
+    @Value("${security.refresh-token-validity-days}")
+    private final int refreshTokenValidityDays;
+
     private final JpaUserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
     private final TokenService tokenService;
 
     public TokenDto handle(RefreshTokenCommand command) {
+        
         User user = fetchUser(command.userId());
 
         validateTokenIgnoringExpiration(command.accessToken());
@@ -35,7 +40,7 @@ public class RefreshTokenCommandHandler {
         String newRefreshToken = refreshTokenService.generateRefreshToken();
 
         user.setRefreshToken(newRefreshToken);
-        user.setRefreshTokenExpiry(LocalDateTime.now().plusDays(1));
+        user.setRefreshTokenExpiry(LocalDateTime.now().plusDays(refreshTokenValidityDays));
         userRepository.save(user);
 
         return new TokenDto(newAccessToken, newRefreshToken);
