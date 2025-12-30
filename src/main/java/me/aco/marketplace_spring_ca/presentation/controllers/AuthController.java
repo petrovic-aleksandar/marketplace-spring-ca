@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.RequiredArgsConstructor;
 import me.aco.marketplace_spring_ca.application.dto.TokenDto;
 import me.aco.marketplace_spring_ca.application.dto.UserDto;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
@@ -22,20 +23,13 @@ import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeToke
 
 @RestController
 @RequestMapping("/api/Auth")
+@RequiredArgsConstructor
 public class AuthController extends BaseController {
 
     private final LoginCommandHandler loginCommandHandler;
     private final RegisterCommandHandler registerCommandHandler;
     private final RefreshTokenCommandHandler refreshTokenCommandHandler;
     private final RevokeTokenCommandHandler revokeTokenCommandHandler;
-
-    public AuthController(LoginCommandHandler loginCommandHandler, RegisterCommandHandler registerCommandHandler,
-            RefreshTokenCommandHandler refreshTokenCommandHandler, RevokeTokenCommandHandler revokeTokenCommandHandler) {
-        this.loginCommandHandler = loginCommandHandler;
-        this.registerCommandHandler = registerCommandHandler;
-        this.refreshTokenCommandHandler = refreshTokenCommandHandler;
-        this.revokeTokenCommandHandler = revokeTokenCommandHandler;
-    }
 
     @GetMapping("/ping")
     public String ping() {
@@ -49,18 +43,17 @@ public class AuthController extends BaseController {
     }
 
     @PostMapping(value = "/register")
-    public CompletableFuture<ResponseEntity<UserDto>> register(@RequestBody RegisterCommand command) {
-        return registerCommandHandler.handle(command)
-                .thenApply(this::created);
+    public ResponseEntity<UserDto> register(@RequestBody RegisterCommand command) {
+        return created(registerCommandHandler.handle(command));
     }
 
     @PostMapping(value = "/refresh-token")
     public ResponseEntity<TokenDto> refreshToken(@RequestBody RefreshTokenCommand command) {
-        return ResponseEntity.ok(refreshTokenCommandHandler.handle(command));
+        return ok(refreshTokenCommandHandler.handle(command));
     }
 
     @PostMapping(value = "/revoke-token")
     public ResponseEntity<Long> revokeToken(@RequestBody RevokeTokenCommand command) {
-        return ResponseEntity.ok(revokeTokenCommandHandler.handle(command));
+        return ok(revokeTokenCommandHandler.handle(command));
     }
 }

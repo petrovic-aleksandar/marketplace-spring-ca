@@ -128,7 +128,7 @@ class AuthControllerTest {
         );
         
         when(registerCommandHandler.handle(any(RegisterCommand.class)))
-                .thenReturn(CompletableFuture.completedFuture(mockUserDto));
+                .thenReturn(mockUserDto);
 
         // Act & Assert
         mockMvc.perform(post("/api/Auth/register")
@@ -154,19 +154,14 @@ class AuthControllerTest {
                 "Existing User",
                 "555-8888"
         );
-        
-        CompletableFuture<UserDto> failedFuture = new CompletableFuture<>();
-        failedFuture.completeExceptionally(new IllegalArgumentException("Username already exists"));
-        
+
         when(registerCommandHandler.handle(any(RegisterCommand.class)))
-                .thenReturn(failedFuture);
+                .thenThrow(new IllegalArgumentException("Username already exists"));
 
         // Act & Assert
         mockMvc.perform(post("/api/Auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerCommand)))
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isBadRequest());
     }
 

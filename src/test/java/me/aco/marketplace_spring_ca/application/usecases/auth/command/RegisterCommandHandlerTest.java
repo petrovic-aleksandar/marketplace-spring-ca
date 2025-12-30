@@ -1,10 +1,19 @@
 package me.aco.marketplace_spring_ca.application.usecases.auth.command;
 
-import me.aco.marketplace_spring_ca.application.dto.UserDto;
-import me.aco.marketplace_spring_ca.domain.entities.User;
-import me.aco.marketplace_spring_ca.domain.enums.UserRole;
-import me.aco.marketplace_spring_ca.domain.intefrace.PasswordHasher;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,15 +22,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import me.aco.marketplace_spring_ca.application.dto.UserDto;
+import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
+import me.aco.marketplace_spring_ca.domain.entities.User;
+import me.aco.marketplace_spring_ca.domain.enums.UserRole;
+import me.aco.marketplace_spring_ca.domain.intefrace.PasswordHasher;
+import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class RegisterCommandHandlerTest {
@@ -61,19 +67,17 @@ class RegisterCommandHandlerTest {
     }
 
     @Test
-    void testRegisterUserSuccess() throws ExecutionException, InterruptedException {
-
+        void testRegisterUserSuccess() {
         // Arrange
         when(userRepository.findSingleByUsername("newuser"))
-                .thenReturn(Optional.empty());
+            .thenReturn(Optional.empty());
         when(passwordHasher.hash("password123"))
-                .thenReturn("hashedPassword");
+            .thenReturn("hashedPassword");
         when(userRepository.save(any(User.class)))
-                .thenReturn(mockSavedUser);
+            .thenReturn(mockSavedUser);
 
         // Act
-        CompletableFuture<UserDto> result = registerCommandHandler.handle(validCommand);
-        UserDto userDto = result.get();
+        UserDto userDto = registerCommandHandler.handle(validCommand);
 
         // Assert
         assertNotNull(userDto, "UserDto should not be null");
@@ -95,11 +99,10 @@ class RegisterCommandHandlerTest {
         assertEquals("hashedPassword", savedUser.getPassword(), "Saved user should have hashed password");
         assertEquals(UserRole.USER, savedUser.getRole(), "Default role should be USER");
         assertTrue(savedUser.isActive(), "User should be active by default");
-    }
+        }
 
     @Test
     void testRegisterUserWithExistingUsername() {
-        
         // Arrange
         User existingUser = new User();
         existingUser.setId(999L);
@@ -109,23 +112,11 @@ class RegisterCommandHandlerTest {
                 .thenReturn(Optional.of(existingUser));
 
         // Act & Assert
-        CompletableFuture<UserDto> result = registerCommandHandler.handle(validCommand);
-
-        assertThrows(ExecutionException.class, () -> {
-            result.get();
-        }, "Should throw ExecutionException when username already exists");
-
-        // Verify the cause is IllegalArgumentException
-        try {
-            result.get();
-        } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof IllegalArgumentException,
-                    "Cause should be IllegalArgumentException");
-            assertEquals("Username already exists", e.getCause().getMessage(),
-                    "Error message should be 'Username already exists'");
-        } catch (InterruptedException e) {
-            fail("Should not be interrupted");
-        }
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            registerCommandHandler.handle(validCommand);
+        }, "Should throw exception when username already exists");
+        assertTrue(exception instanceof BusinessException);
+        assertEquals("Username is already taken", exception.getMessage());
 
         // Verify no user was saved
         verify(userRepository, times(1)).findSingleByUsername("newuser");

@@ -12,4 +12,8 @@ public abstract class BaseController {
     protected <T> ResponseEntity<T> noContent(T ignored) {
         return ResponseEntity.noContent().build();
     }
+
+    protected <T> ResponseEntity<T> ok(T body) {
+        return ResponseEntity.ok(body);
+    }
 }
