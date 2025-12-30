@@ -17,7 +17,7 @@ public interface JpaItemRepository extends JpaRepository<Item, Long> {
 
     List<Item> findBySeller(User seller);
     
-    List<Item> findByType(ItemType type);
+    List<Item> findByTypeAndActiveTrue(ItemType type);
 
     @Query("SELECT i FROM Item i LEFT JOIN FETCH i.images WHERE i.id = :id")
     Optional<Item> findByIdWithImages(@Param("id") Long id);

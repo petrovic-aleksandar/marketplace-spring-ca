@@ -3,6 +3,7 @@ package me.aco.marketplace_spring_ca.integration;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -82,7 +83,7 @@ public class AddItemDeactivateActivateAndDelete {
         assertTrue(createdItemOpt.isPresent());
 
         // Step 3: Deactivate the item
-        mockMvc.perform(post("/api/Item/Deactivate/" + createdItemOpt.get().getId()))
+        mockMvc.perform(put("/api/Item/Deactivate/" + createdItemOpt.get().getId()))
             .andExpect(status().isOk())
             .andExpect(request().asyncStarted())
             .andDo(result -> mockMvc.perform(asyncDispatch(result))
@@ -94,7 +95,7 @@ public class AddItemDeactivateActivateAndDelete {
         assertTrue(!deactivatedItemOpt.get().isActive());
 
         // Step 4: Activate the item
-        mockMvc.perform(post("/api/Item/Activate/" + createdItemOpt.get().getId()))
+        mockMvc.perform(put("/api/Item/Activate/" + createdItemOpt.get().getId()))
             .andExpect(status().isOk())
             .andExpect(request().asyncStarted())
             .andDo(result -> mockMvc.perform(asyncDispatch(result))

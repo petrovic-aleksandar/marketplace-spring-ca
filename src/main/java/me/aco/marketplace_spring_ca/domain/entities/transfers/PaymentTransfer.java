@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @DiscriminatorValue("PAYMENT")
 public class PaymentTransfer extends Transfer {
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

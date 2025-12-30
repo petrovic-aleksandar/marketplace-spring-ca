@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -96,13 +97,13 @@ public class ItemsController extends BaseController {
                 .thenApply(ResponseEntity::ok);
     }
 
-    @PostMapping("/Deactivate/{id}")
+    @PutMapping("/Deactivate/{id}")
     public CompletableFuture<ResponseEntity<ItemDto>> deactivateItem(@PathVariable Long id) {
         return deactivateItemCommandHandler.handle(new DeactivateItemCommand(id))
                 .thenApply(ResponseEntity::ok);
     }
 
-    @PostMapping("/Activate/{id}")
+    @PutMapping("/Activate/{id}")
     public CompletableFuture<ResponseEntity<ItemDto>> activateItem(@PathVariable Long id) {
         return activateItemCommandHandler.handle(new ActivateItemCommand(id))
                 .thenApply(ResponseEntity::ok);

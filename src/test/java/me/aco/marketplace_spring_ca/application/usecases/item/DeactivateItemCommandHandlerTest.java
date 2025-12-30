@@ -79,7 +79,11 @@ public class DeactivateItemCommandHandlerTest {
 
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.of(mockItem));
-        when(jpaItemRepository.save(any())).thenReturn(mockItem);
+        when(jpaItemRepository.save(any(Item.class))).thenAnswer(invocation -> {
+            Item item = invocation.getArgument(0);
+            item.setActive(false);
+            return item;
+        });
         DeactivateItemCommand command = new DeactivateItemCommand(1L);
 
         // Act

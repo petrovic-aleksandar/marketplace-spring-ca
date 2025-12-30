@@ -76,7 +76,11 @@ public class ActivateItemCommandHandlerTest {
 
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.of(mockItem));
-        when(jpaItemRepository.save(any())).thenReturn(mockItem);
+        when(jpaItemRepository.save(any(Item.class))).thenAnswer(invocation -> {
+            Item item = invocation.getArgument(0);
+            item.setActive(true);
+            return item;
+        });
 
         ActivateItemCommand command = new ActivateItemCommand(1L);
 

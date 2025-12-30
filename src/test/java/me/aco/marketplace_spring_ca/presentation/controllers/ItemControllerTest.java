@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -303,7 +304,7 @@ public class ItemControllerTest {
             .thenReturn(CompletableFuture.completedFuture(mockItem1));
 
         // Act & Assert
-        mockMvc.perform(post("/api/Item/Activate/1"))
+        mockMvc.perform(put("/api/Item/Activate/1"))
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
                 .andDo(result -> mockMvc.perform(asyncDispatch(result)))
@@ -319,7 +320,7 @@ public class ItemControllerTest {
         when(activateItemCommandHandler.handle(any()))
             .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Item not found")));
         // Act & Assert
-        mockMvc.perform(post("/api/Item/Activate/1"))
+        mockMvc.perform(put("/api/Item/Activate/1"))
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
                 .andDo(result -> mockMvc.perform(asyncDispatch(result)))

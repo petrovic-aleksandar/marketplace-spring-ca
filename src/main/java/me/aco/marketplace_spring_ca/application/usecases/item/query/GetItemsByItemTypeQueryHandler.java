@@ -31,7 +31,7 @@ public class GetItemsByItemTypeQueryHandler {
 
     public CompletableFuture<List<ItemDto>> handle(GetItemsByItemTypeQuery query) {
         return CompletableFuture.supplyAsync(() -> 
-            itemRepository.findByType(itemTypeRepository.findById(query.typeId())
+            itemRepository.findByTypeAndActiveTrue(itemTypeRepository.findById(query.typeId())
                     .orElseThrow(() -> new ResourceNotFoundException("Item type not found")))
                     .stream()
                     .map(item -> {
