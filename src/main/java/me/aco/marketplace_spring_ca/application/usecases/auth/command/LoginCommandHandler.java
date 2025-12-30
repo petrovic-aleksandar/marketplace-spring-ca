@@ -32,7 +32,9 @@ public class LoginCommandHandler {
 
         validateCredentials(command);
 
-        User user = authenticate(command);
+        User user = fetchUserByUsername(command.username());
+        
+        authenticate(user, command.password());
 
         String accessToken = tokenService.generateToken(user);
         String refreshToken = refreshTokenService.generateRefreshToken();
@@ -49,14 +51,14 @@ public class LoginCommandHandler {
             throw new IllegalArgumentException("Password must be provided");
     }
 
-    private User authenticate(LoginCommand command) {
-        User user = userRepository.findSingleByUsername(command.username())
+    private User fetchUserByUsername(String username) {
+        return userRepository.findSingleByUsername(username)
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+    }
 
-        if (!passwordHasher.verify(command.password(), user.getPassword()))
+    private void authenticate(User user, String password) {
+        if (!passwordHasher.verify(password, user.getPassword()))
             throw new AuthenticationException("Invalid credentials");
-
-        return user;
     }
 
     private User saveUser(User user, String refreshToken) {
