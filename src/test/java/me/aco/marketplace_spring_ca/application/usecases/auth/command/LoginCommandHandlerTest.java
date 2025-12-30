@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,7 +17,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -44,11 +44,12 @@ class LoginCommandHandlerTest {
     @Mock
     private PasswordHasher passwordHasher;
 
-    @InjectMocks
     private LoginCommandHandler loginCommandHandler;
 
     private User testUser;
     private LoginCommand validCommand;
+    private String accessToken = "jwt_token_123";
+    private String refreshToken = "refresh_token_456";
 
     @BeforeEach
     void setUp() {
@@ -65,39 +66,47 @@ class LoginCommandHandlerTest {
                 true,
                 null,
                 null,
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
 
         validCommand = new LoginCommand("testuser", "password123");
+
+        int refreshTokenValidityDays = 7;
+        loginCommandHandler = new LoginCommandHandler(
+            refreshTokenValidityDays,
+            userRepository,
+            refreshTokenService,
+            tokenService,
+            passwordHasher
+        );
     }
 
-        @Test
-        void testLoginSuccess() {
+    @Test
+    void testLoginSuccess() {
+
         // Arrange
-        String expectedToken = "jwt_token_123";
-        String expectedRefreshToken = "refresh_token_456";
         when(userRepository.findSingleByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(passwordHasher.verify("password123", testUser.getPassword())).thenReturn(true);
-        when(tokenService.generateToken(testUser)).thenReturn(expectedToken);
-        when(refreshTokenService.generateRefreshToken()).thenReturn(expectedRefreshToken);
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(tokenService.generateToken(testUser)).thenReturn(accessToken);
+        when(refreshTokenService.generateRefreshToken()).thenReturn(refreshToken);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         TokenDto tokenDto = loginCommandHandler.handle(validCommand);
 
         // Assert
         assertNotNull(tokenDto);
-        assertEquals(expectedToken, tokenDto.accessToken());
-        assertEquals(expectedRefreshToken, tokenDto.refreshToken());
-        verify(userRepository).findSingleByUsername("testuser");
-        verify(passwordHasher).verify("password123", testUser.getPassword());
-        verify(tokenService).generateToken(testUser);
-        verify(refreshTokenService).generateRefreshToken();
-        verify(userRepository).save(any(User.class));
-        }
+        assertEquals(accessToken, tokenDto.accessToken());
+        assertEquals(refreshToken, tokenDto.refreshToken());
+        verify(userRepository, times(1)).findSingleByUsername("testuser");
+        verify(passwordHasher, times(1)).verify("password123", testUser.getPassword());
+        verify(tokenService, times(1)).generateToken(testUser);
+        verify(refreshTokenService, times(1)).generateRefreshToken();
+        verify(userRepository, times(1)).save(any(User.class));
+    }
 
     @Test
-    void testLoginWithWrongPassword() {
+    void testLoginFailure_WrongPassword() {
+
         // Arrange
         when(userRepository.findSingleByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(passwordHasher.verify("wrongPassword", testUser.getPassword())).thenReturn(false);
@@ -108,14 +117,15 @@ class LoginCommandHandlerTest {
             loginCommandHandler.handle(wrongPasswordCommand);
         });
 
-        verify(userRepository).findSingleByUsername("testuser");
-        verify(passwordHasher).verify("wrongPassword", testUser.getPassword());
+        verify(userRepository, times(1)).findSingleByUsername("testuser");
+        verify(passwordHasher, times(1)).verify("wrongPassword", testUser.getPassword());
         verify(tokenService, never()).generateToken(any());
         verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void testLoginWithNonExistingUser() {
+    void testLoginFailure_NonExistingUser() {
+
         // Arrange
         when(userRepository.findSingleByUsername("nonexistentuser")).thenReturn(Optional.empty());
         LoginCommand nonExistentCommand = new LoginCommand("nonexistentuser", "password123");
@@ -125,7 +135,41 @@ class LoginCommandHandlerTest {
             loginCommandHandler.handle(nonExistentCommand);
         });
 
-        verify(userRepository).findSingleByUsername("nonexistentuser");
+        verify(userRepository, times(1)).findSingleByUsername("nonexistentuser");
+        verify(passwordHasher, never()).verify(anyString(), anyString());
+        verify(tokenService, never()).generateToken(any());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testLoginFailure_InvalidCommandEmptyPassword() {
+
+        // Arrange
+        LoginCommand invalidCommand = new LoginCommand("okusername", "");
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            loginCommandHandler.handle(invalidCommand);
+        });
+
+        verify(userRepository, never()).findSingleByUsername(anyString());
+        verify(passwordHasher, never()).verify(anyString(), anyString());
+        verify(tokenService, never()).generateToken(any());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testLoginFailure_InvalidCommandEmptyUsername() {
+        
+        // Arrange
+        LoginCommand invalidCommand = new LoginCommand("", "okpassword");
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            loginCommandHandler.handle(invalidCommand);
+        });
+
+        verify(userRepository, never()).findSingleByUsername(anyString());
         verify(passwordHasher, never()).verify(anyString(), anyString());
         verify(tokenService, never()).generateToken(any());
         verify(userRepository, never()).save(any(User.class));

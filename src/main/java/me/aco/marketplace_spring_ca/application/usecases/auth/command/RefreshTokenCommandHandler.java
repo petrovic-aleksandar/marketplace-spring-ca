@@ -47,6 +47,9 @@ public class RefreshTokenCommandHandler {
     }
 
     private User fetchUser(Long userId) {
+        if (userId == null)
+            throw new IllegalArgumentException("User ID cannot be null");
+
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }

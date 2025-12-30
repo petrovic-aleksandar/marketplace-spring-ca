@@ -1,5 +1,24 @@
 package me.aco.marketplace_spring_ca.application.usecases.auth.command;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import me.aco.marketplace_spring_ca.application.dto.TokenDto;
 import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
@@ -8,20 +27,6 @@ import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 import me.aco.marketplace_spring_ca.domain.intefrace.RefreshTokenService;
 import me.aco.marketplace_spring_ca.domain.intefrace.TokenService;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RefreshTokenCommandHandlerTest {
@@ -35,11 +40,12 @@ class RefreshTokenCommandHandlerTest {
     @Mock
     private TokenService tokenService;
 
-    @InjectMocks
     private RefreshTokenCommandHandler refreshTokenCommandHandler;
 
     private User testUser;
     private RefreshTokenCommand validCommand;
+    private String newAccessToken = "new-access-token-456";
+    private String newRefreshToken = "new-refresh-token-789";
 
     @BeforeEach
     void setUp() {
@@ -63,13 +69,20 @@ class RefreshTokenCommandHandlerTest {
                 "valid-access-token",
                 "refresh-token-123"
         );
+
+        int refreshTokenValidityDays = 7;
+        refreshTokenCommandHandler = new RefreshTokenCommandHandler(
+                refreshTokenValidityDays,
+                userRepository,
+                refreshTokenService,
+                tokenService
+        );
     }
 
     @Test
     void testRefreshTokenSuccess() {
+
         // Arrange
-        String newAccessToken = "new-access-token-456";
-        String newRefreshToken = "new-refresh-token-789";
         when(tokenService.validateTokenIgnoringExpiration("valid-access-token")).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(tokenService.generateToken(testUser)).thenReturn(newAccessToken);
@@ -95,6 +108,7 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_UserNotFound() {
+
         // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -107,6 +121,7 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_InvalidAccessToken() {
+
         // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(tokenService.validateTokenIgnoringExpiration("invalid-access-token")).thenReturn(false);
@@ -124,10 +139,12 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_InvalidRefreshToken() {
+
         // Arrange
         when(tokenService.validateTokenIgnoringExpiration("valid-access-token")).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-
+        when(tokenService.isTokenExpired("valid-access-token")).thenReturn(true);
+        
         RefreshTokenCommand invalidRefreshCommand = new RefreshTokenCommand(
                 1L,
                 "valid-access-token",
@@ -143,21 +160,25 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_ExpiredRefreshToken() {
+
         // Arrange
         testUser.setRefreshTokenExpiry(LocalDateTime.now().minusDays(1)); // Expire the token
         when(tokenService.validateTokenIgnoringExpiration("valid-access-token")).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(tokenService.isTokenExpired("valid-access-token")).thenReturn(true);
 
         // Act & Assert
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+        BusinessException thrown = assertThrows(BusinessException.class, () -> {
             refreshTokenCommandHandler.handle(validCommand);
-        }, "Should throw IllegalArgumentException for expired refresh token");
+        }, "Should throw BusinessException for expired refresh token");
         assertEquals("Refresh token expired", thrown.getMessage(), "Error message should be 'Refresh token expired'");
     }
 
     @Test
     void testRefreshTokenFailure_NullAccessToken() {
+
         // Arrange
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         RefreshTokenCommand nullAccessTokenCommand = new RefreshTokenCommand(
                 1L,
                 null,
@@ -173,14 +194,16 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_NullRefreshToken() {
+
         // Arrange
+        when(tokenService.validateTokenIgnoringExpiration("valid-access-token")).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(tokenService.isTokenExpired("valid-access-token")).thenReturn(true);
         RefreshTokenCommand nullRefreshTokenCommand = new RefreshTokenCommand(
                 1L,
                 "valid-access-token",
                 null
         );
-        when(tokenService.validateTokenIgnoringExpiration("valid-access-token")).thenReturn(true);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
         // Act & Assert
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
@@ -191,7 +214,9 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_EmptyAccessToken() {
+
         // Arrange
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         RefreshTokenCommand emptyAccessTokenCommand = new RefreshTokenCommand(
                 1L,
                 "",
@@ -207,20 +232,40 @@ class RefreshTokenCommandHandlerTest {
 
     @Test
     void testRefreshTokenFailure_EmptyRefreshToken() {
+
         // Arrange
+        when(tokenService.validateTokenIgnoringExpiration("valid-access-token")).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(tokenService.isTokenExpired("valid-access-token")).thenReturn(true);
         RefreshTokenCommand emptyRefreshTokenCommand = new RefreshTokenCommand(
                 1L,
                 "valid-access-token",
                 ""
         );
-        when(tokenService.validateTokenIgnoringExpiration("valid-access-token")).thenReturn(true);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        
 
         // Act & Assert
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
             refreshTokenCommandHandler.handle(emptyRefreshTokenCommand);
         }, "Should throw IllegalArgumentException for empty refresh token");
         assertEquals("Refresh token cannot be null or empty", thrown.getMessage(), "Error message should be 'Refresh token cannot be null or empty'");
+    }
+
+    @Test
+    void testRefreshTokenFailure_NullUserId() {
+
+        // Arrange
+        RefreshTokenCommand nullUserIdCommand = new RefreshTokenCommand(
+                null,
+                "valid-access-token",
+                "refresh-token-123"
+        );
+
+        // Act & Assert
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            refreshTokenCommandHandler.handle(nullUserIdCommand);
+        }, "Should throw IllegalArgumentException for null user ID");
+        assertEquals("User ID cannot be null", thrown.getMessage(), "Error message should be 'User ID cannot be null'");
     }
 
 

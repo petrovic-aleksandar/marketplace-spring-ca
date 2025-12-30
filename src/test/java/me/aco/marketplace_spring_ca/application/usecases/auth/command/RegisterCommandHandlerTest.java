@@ -51,8 +51,7 @@ class RegisterCommandHandlerTest {
                 "password123",
                 "newuser@example.com",
                 "New User",
-                "555-9999"
-        );
+                "555-9999");
 
         mockSavedUser = new User();
         mockSavedUser.setId(1L);
@@ -67,14 +66,12 @@ class RegisterCommandHandlerTest {
     }
 
     @Test
-        void testRegisterUserSuccess() {
+    void testRegisterUserSuccess() {
+
         // Arrange
-        when(userRepository.findSingleByUsername("newuser"))
-            .thenReturn(Optional.empty());
-        when(passwordHasher.hash("password123"))
-            .thenReturn("hashedPassword");
-        when(userRepository.save(any(User.class)))
-            .thenReturn(mockSavedUser);
+        when(userRepository.findSingleByUsername("newuser")).thenReturn(Optional.empty());
+        when(passwordHasher.hash("password123")).thenReturn("hashedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(mockSavedUser);
 
         // Act
         UserDto userDto = registerCommandHandler.handle(validCommand);
@@ -99,17 +96,17 @@ class RegisterCommandHandlerTest {
         assertEquals("hashedPassword", savedUser.getPassword(), "Saved user should have hashed password");
         assertEquals(UserRole.USER, savedUser.getRole(), "Default role should be USER");
         assertTrue(savedUser.isActive(), "User should be active by default");
-        }
+    }
 
     @Test
     void testRegisterUserWithExistingUsername() {
+        
         // Arrange
         User existingUser = new User();
         existingUser.setId(999L);
         existingUser.setUsername("newuser");
 
-        when(userRepository.findSingleByUsername("newuser"))
-                .thenReturn(Optional.of(existingUser));
+        when(userRepository.findSingleByUsername("newuser")).thenReturn(Optional.of(existingUser));
 
         // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -122,5 +119,126 @@ class RegisterCommandHandlerTest {
         verify(userRepository, times(1)).findSingleByUsername("newuser");
         verify(passwordHasher, never()).hash(anyString());
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testRegisterUserWithInvalidCommand_EmptyUsername() {
+
+        // Arrange
+        RegisterCommand invalidCommand = new RegisterCommand(
+                "",
+                "password123",
+                "newuser@example.com",
+                "New User",
+                "555-9999");
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            registerCommandHandler.handle(invalidCommand);
+        }, "Should throw exception for empty username");
+        assertTrue(exception instanceof BusinessException);
+        assertEquals("Username cannot be empty", exception.getMessage());
+
+        // Verify no user was saved
+        verify(userRepository, never()).findSingleByUsername(anyString());
+        verify(passwordHasher, never()).hash(anyString());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testRegisterUserWithInvalidCommand_EmptyPassword() {
+
+        // Arrange
+        RegisterCommand invalidCommand = new RegisterCommand(
+                "newuser",
+                "",
+                "newuser@example.com",
+                "New User",
+                "555-9999");
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            registerCommandHandler.handle(invalidCommand);
+        }, "Should throw exception for empty password");
+        assertTrue(exception instanceof BusinessException);
+        assertEquals("Password cannot be empty", exception.getMessage());
+
+        // Verify no user was saved
+        verify(userRepository, never()).findSingleByUsername(anyString());
+        verify(passwordHasher, never()).hash(anyString());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testRegisterUserWithInvalidCommand_EmptyEmail() {
+
+        // Arrange
+        RegisterCommand invalidCommand = new RegisterCommand(
+                "newuser",
+                "password123",
+                "",
+                "New User",
+                "555-9999");
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            registerCommandHandler.handle(invalidCommand);
+        }, "Should throw exception for empty email");
+        assertTrue(exception instanceof BusinessException);
+        assertEquals("Email cannot be empty", exception.getMessage());
+
+        // Verify no user was saved
+        verify(userRepository, never()).findSingleByUsername(anyString());
+        verify(passwordHasher, never()).hash(anyString());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testRegisterUserWithInvalidCommand_EmptyName() {
+
+        // Arrange
+        RegisterCommand invalidCommand = new RegisterCommand(
+                "newuser",
+                "password123",
+                "newuser@example.com",
+                "",
+                "555-9999");
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            registerCommandHandler.handle(invalidCommand);
+        }, "Should throw exception for empty name");
+        assertTrue(exception instanceof BusinessException);
+        assertEquals("Name cannot be empty", exception.getMessage());
+
+        // Verify no user was saved
+        verify(userRepository, never()).findSingleByUsername(anyString());
+        verify(passwordHasher, never()).hash(anyString());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testRegisterUserWithInvalidCommand_EmptyPhone() {
+
+        // Arrange
+        RegisterCommand invalidCommand = new RegisterCommand(
+                "newuser",
+                "password123",
+                "newuser@example.com",
+                "New User",
+                "");
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            registerCommandHandler.handle(invalidCommand);
+        }, "Should throw exception for empty phone");
+        assertTrue(exception instanceof BusinessException);
+        assertEquals("Phone cannot be empty", exception.getMessage());
+
+        // Verify no user was saved
+        verify(userRepository, never()).findSingleByUsername(anyString());
+        verify(passwordHasher, never()).hash(anyString());
+        verify(userRepository, never()).save(any(User.class));
+
     }
 }
