@@ -10,8 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -48,7 +46,7 @@ public class ImageControllerTest {
         String fileName = "test.jpg";
         MockMultipartFile file = new MockMultipartFile("file", fileName, MediaType.IMAGE_JPEG_VALUE, "dummy".getBytes());
         ImageDto dto = new ImageDto(999L, fileName, false);
-        when(addImageCommandHandler.handle(any())).thenReturn(CompletableFuture.completedFuture(dto));
+        when(addImageCommandHandler.handle(any())).thenReturn(dto);
 
         mockMvc.perform(multipart("/api/Image/" + itemId)
                     .file(file)
@@ -65,7 +63,7 @@ public class ImageControllerTest {
 
         // Arrange
         Long imageId = 42L;
-        when(deleteImageCommandHandler.handle(any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(deleteImageCommandHandler.handle(any())).thenReturn(null);
 
         // Act & Assert
         ResultActions result = mockMvc.perform(delete("/api/Image/" + imageId));
@@ -80,7 +78,7 @@ public class ImageControllerTest {
         // Arrange
         Long imageId = 5L;
         ImageDto dto = new ImageDto(imageId, "front.jpg", true);
-        when(makeImangeFrontCommandHandler.handle(any())).thenReturn(CompletableFuture.completedFuture(dto));
+        when(makeImangeFrontCommandHandler.handle(any())).thenReturn(dto);
 
         // Act & Assert
         ResultActions result = mockMvc.perform(post("/api/Image/front/" + imageId));

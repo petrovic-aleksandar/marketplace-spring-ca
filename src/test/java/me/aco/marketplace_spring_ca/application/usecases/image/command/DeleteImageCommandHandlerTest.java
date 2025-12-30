@@ -2,8 +2,6 @@ package me.aco.marketplace_spring_ca.application.usecases.image.command;
 
 import static org.mockito.Mockito.verify;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,8 +27,7 @@ class DeleteImageCommandHandlerTest {
         DeleteImageCommand command = new DeleteImageCommand(imageId);
 
         // Act
-        CompletableFuture<Void> future = handler.handle(command);
-        future.get();
+        handler.handle(command);
 
         // Assert
         verify(imageRepository).deleteById(imageId);

@@ -44,11 +44,11 @@ class GetImagesByItemQueryHandlerSpeedTest {
         when(query.itemId()).thenReturn(1L);
 
         long startJpa = System.nanoTime();
-        List<ImageDto> jpaResult = jpaHandler.handle(query).get();
+        List<ImageDto> jpaResult = jpaHandler.handle(query);
         long endJpa = System.nanoTime();
 
         long startCrud = System.nanoTime();
-        List<ImageDto> crudResult = crudHandler.handle(query).get();
+        List<ImageDto> crudResult = crudHandler.handle(query);
         long endCrud = System.nanoTime();
 
         System.out.printf("JPA Handler: %d ms\n", (endJpa - startJpa) / 1_000_000);

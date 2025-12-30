@@ -1,23 +1,26 @@
 package me.aco.marketplace_spring_ca.application.usecases.image.command;
 
-import me.aco.marketplace_spring_ca.application.dto.ImageDto;
-import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
-import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
-import me.aco.marketplace_spring_ca.domain.entities.Image;
-import me.aco.marketplace_spring_ca.domain.entities.Item;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaImageRepository;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import me.aco.marketplace_spring_ca.application.dto.ImageDto;
+import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
+import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
+import me.aco.marketplace_spring_ca.domain.entities.Image;
+import me.aco.marketplace_spring_ca.domain.entities.Item;
+import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaImageRepository;
 
 @ExtendWith(MockitoExtension.class)
 class MakeImangeFrontCommandHandlerTest {
@@ -50,8 +53,7 @@ class MakeImangeFrontCommandHandlerTest {
         when(imageRepository.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        CompletableFuture<ImageDto> future = handler.handle(command);
-        ImageDto dto = future.get();
+        ImageDto dto = handler.handle(command);
 
         // Assert
         verify(imageRepository).findById(imageId);
@@ -71,12 +73,10 @@ class MakeImangeFrontCommandHandlerTest {
         image.setFront(true);
         when(imageRepository.findById(imageId)).thenReturn(Optional.of(image));
 
-        // Act
-        CompletableFuture<ImageDto> future = handler.handle(command);
-
-        // Assert
-        Exception ex = assertThrows(Exception.class, future::get);
-        assertTrue(ex.getCause() instanceof BusinessException);
+        // Act & Assert
+        assertThrows(BusinessException.class, () -> {
+            handler.handle(command);
+        });
     }
 
     @Test
@@ -87,11 +87,9 @@ class MakeImangeFrontCommandHandlerTest {
         MakeImageFrontCommand command = new MakeImageFrontCommand(imageId);
         when(imageRepository.findById(imageId)).thenReturn(Optional.empty());
 
-        // Act
-        CompletableFuture<ImageDto> future = handler.handle(command);
-        Exception ex = assertThrows(Exception.class, future::get);
-
-        // Assert
-        assertTrue(ex.getCause() instanceof ResourceNotFoundException);
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            handler.handle(command);
+        });
     }
 }

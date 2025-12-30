@@ -1,5 +1,21 @@
 package me.aco.marketplace_spring_ca.application.usecases.image.command;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.InputStream;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import me.aco.marketplace_spring_ca.application.dto.ImageDto;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
 import me.aco.marketplace_spring_ca.domain.entities.Image;
@@ -7,18 +23,6 @@ import me.aco.marketplace_spring_ca.domain.entities.Item;
 import me.aco.marketplace_spring_ca.domain.intefrace.FileStorageService;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaImageRepository;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.io.InputStream;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AddImageCommandHandlerTest {
@@ -51,8 +55,7 @@ class AddImageCommandHandlerTest {
         when(imageRepository.save(any(Image.class))).thenReturn(savedImage);
 
         // Act
-        CompletableFuture<ImageDto> future = handler.handle(command);
-        ImageDto dto = future.get();
+        ImageDto dto = handler.handle(command);
 
         // Assert
         verify(fileStorageService).saveToFile(fileStream, fileName);
@@ -72,11 +75,9 @@ class AddImageCommandHandlerTest {
         AddImageCommand command = new AddImageCommand(itemId, fileName, fileStream);
         when(itemRepository.findById(itemId)).thenReturn(Optional.empty());
 
-        // Act
-        CompletableFuture<ImageDto> future = handler.handle(command);
-
-        // Assert
-        Exception ex = assertThrows(Exception.class, future::get);
-        assertTrue(ex.getCause() instanceof ResourceNotFoundException);
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            handler.handle(command);
+        });
     }
 }
