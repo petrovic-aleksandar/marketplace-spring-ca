@@ -69,15 +69,6 @@ class LoginCommandHandlerTest {
                 LocalDateTime.now());
 
         validCommand = new LoginCommand("testuser", "password123");
-
-        int refreshTokenValidityDays = 7;
-        loginCommandHandler = new LoginCommandHandler(
-            refreshTokenValidityDays,
-            userRepository,
-            refreshTokenService,
-            tokenService,
-            passwordHasher
-        );
     }
 
     @Test

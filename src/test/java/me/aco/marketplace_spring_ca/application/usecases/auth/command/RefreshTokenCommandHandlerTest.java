@@ -69,14 +69,6 @@ class RefreshTokenCommandHandlerTest {
                 "valid-access-token",
                 "refresh-token-123"
         );
-
-        int refreshTokenValidityDays = 7;
-        refreshTokenCommandHandler = new RefreshTokenCommandHandler(
-                refreshTokenValidityDays,
-                userRepository,
-                refreshTokenService,
-                tokenService
-        );
     }
 
     @Test
