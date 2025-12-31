@@ -4,7 +4,7 @@ import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
-import java.util.concurrent.CompletableFuture;
+// ...existing code...
 import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +63,7 @@ public class AddUserCommandHandlerTest {
     }
 
     @Test
-    void testHandleValidCommand() throws ExecutionException, InterruptedException {
+    void testHandleValidCommand() throws InterruptedException {
 
         //Arrange
         when(passwordHasher.hash(anyString()))
@@ -72,8 +72,7 @@ public class AddUserCommandHandlerTest {
             .thenReturn(mockSavedUser);
 
         //Act
-        CompletableFuture<UserDto> resultFuture = addUserCommandHandler.handle(validCommand);
-        UserDto result = resultFuture.get();
+        UserDto result = addUserCommandHandler.handle(validCommand);
 
         //Assert
         assertNotNull(result);
@@ -93,13 +92,9 @@ public class AddUserCommandHandlerTest {
         // Arrange
         when(userRepository.existsByUsername("testuser")).thenReturn(true);
 
-        // Act
-        CompletableFuture<UserDto> resultFuture = addUserCommandHandler.handle(validCommand);
-
-        // Assert
-        ExecutionException thrown = assertThrows(ExecutionException.class, resultFuture::get);
-        assertTrue(thrown.getCause() instanceof IllegalArgumentException);
-        assertTrue(thrown.getCause().getMessage().toLowerCase().contains("username"));
+        // Act & Assert
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> addUserCommandHandler.handle(validCommand));
+        assertTrue(thrown.getMessage().toLowerCase().contains("username"));
     }
 
     

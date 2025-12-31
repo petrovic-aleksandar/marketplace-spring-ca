@@ -1,24 +1,26 @@
 package me.aco.marketplace_spring_ca.application.usecases.user.command;
 
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
-import me.aco.marketplace_spring_ca.application.dto.UserDto;
-import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
-import me.aco.marketplace_spring_ca.domain.entities.User;
-import me.aco.marketplace_spring_ca.domain.enums.UserRole;
-import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import me.aco.marketplace_spring_ca.application.dto.UserDto;
+import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
+import me.aco.marketplace_spring_ca.domain.entities.User;
+import me.aco.marketplace_spring_ca.domain.enums.UserRole;
+import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class ActivateUserCommandHandlerTest {
@@ -52,10 +54,9 @@ public class ActivateUserCommandHandlerTest {
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 		when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // Act
+		// Act
 		ActivateUserCommand command = new ActivateUserCommand(1L);
-		CompletableFuture<UserDto> resultFuture = handler.handle(command);
-		UserDto result = resultFuture.get();
+		UserDto result = handler.handle(command);
 
         // Assert
 		assertTrue(user.isActive());
@@ -65,16 +66,12 @@ public class ActivateUserCommandHandlerTest {
 	@Test
 	void testActivateUserNotFound() {
 
-        // Arrange
+		// Arrange
 		when(userRepository.findById(2L)).thenReturn(Optional.empty());
 
-        // Act
+		// Act & Assert
 		ActivateUserCommand command = new ActivateUserCommand(2L);
-		CompletableFuture<UserDto> resultFuture = handler.handle(command);
-		ExecutionException thrown = assertThrows(ExecutionException.class, resultFuture::get);
-
-        // Assert
-		assertTrue(thrown.getCause() instanceof ResourceNotFoundException);
-		assertTrue(thrown.getCause().getMessage().toLowerCase().contains("user not found"));
+		ResourceNotFoundException thrown = assertThrows(ResourceNotFoundException.class, () -> handler.handle(command));
+		assertTrue(thrown.getMessage().toLowerCase().contains("user not found"));
 	}
 }

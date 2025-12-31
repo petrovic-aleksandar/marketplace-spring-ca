@@ -2,10 +2,13 @@ package me.aco.marketplace_spring_ca.presentation.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +27,6 @@ import me.aco.marketplace_spring_ca.application.usecases.user.command.UpdateUser
 import me.aco.marketplace_spring_ca.application.usecases.user.command.UpdateUserCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.user.query.GetAllUsersQueryHandler;
 import me.aco.marketplace_spring_ca.application.usecases.user.query.GetUserByIdQueryHandler;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 
 @WebMvcTest(UsersController.class)
 public class UserControllerTest {
@@ -68,12 +64,10 @@ public class UserControllerTest {
             true);
 
         when(getUserByIdQueryHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(user));
+            .thenReturn(user);
         
         // Act & Assert
         mockMvc.perform(get("/api/User/1"))
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(1));
     }
@@ -94,12 +88,10 @@ public class UserControllerTest {
                 true
             ));
 
-        when(getAllUsersQueryHandler.handle(any())).thenReturn(CompletableFuture.completedFuture(users));
+        when(getAllUsersQueryHandler.handle(any())).thenReturn(users);
         
         // Act & Assert
         mockMvc.perform(get("/api/User/ "))
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(1));
     }
@@ -119,7 +111,7 @@ public class UserControllerTest {
             true);
 
         when(addUserCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(user));
+            .thenReturn(user);
             
         String json = objectMapper.writeValueAsString(
             new AddUserCommand(
@@ -135,8 +127,6 @@ public class UserControllerTest {
         mockMvc.perform(post("/api/User")
                 .contentType("application/json")
                 .content(json))
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(2));
     }
@@ -156,7 +146,7 @@ public class UserControllerTest {
             true);
 
         when(updateUserCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(user));
+            .thenReturn(user);
 
         String json = objectMapper.writeValueAsString(
             new UpdateUserCommand(
@@ -174,8 +164,6 @@ public class UserControllerTest {
         mockMvc.perform(post("/api/User/1")
                 .contentType("application/json")
                 .content(json))
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(1));
     }
@@ -195,12 +183,10 @@ public class UserControllerTest {
             false);
 
         when(deactivateUserCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(user));
+            .thenReturn(user);
 
         // Act & Assert
         mockMvc.perform(post("/api/User/deactivate/1"))
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.active").value(false));
     }
@@ -220,12 +206,10 @@ public class UserControllerTest {
             true
         );
 
-        when(activateUserCommandHandler.handle(any())).thenReturn(CompletableFuture.completedFuture(user));
+        when(activateUserCommandHandler.handle(any())).thenReturn(user);
 
         // Act & Assert
         mockMvc.perform(post("/api/User/activate/1"))
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.active").value(true));
     }

@@ -5,8 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+// ...existing code...
 
 import me.aco.marketplace_spring_ca.application.dto.UserDto;
 import me.aco.marketplace_spring_ca.domain.entities.User;
@@ -60,9 +59,8 @@ public class UpdateUserCommandHandlerTest {
 		when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
 		when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         
-        // Act
-		CompletableFuture<UserDto> resultFuture = handler.handle(command);
-		UserDto result = resultFuture.get();
+		// Act
+		UserDto result = handler.handle(command);
         
 		// Assert
 		assertEquals("newuser", result.username());
@@ -87,13 +85,9 @@ public class UpdateUserCommandHandlerTest {
 
 		when(userRepository.findById(2L)).thenReturn(Optional.empty());
         
-        // Act
-		CompletableFuture<UserDto> resultFuture = handler.handle(command);
-        
-		// Assert
-		ExecutionException thrown = assertThrows(ExecutionException.class, resultFuture::get);
-		assertTrue(thrown.getCause() instanceof IllegalArgumentException);
-		assertTrue(thrown.getCause().getMessage().toLowerCase().contains("user not found"));
+		// Act & Assert
+		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> handler.handle(command));
+		assertTrue(thrown.getMessage().toLowerCase().contains("user not found"));
 	}
 
 	@Test
@@ -112,9 +106,8 @@ public class UpdateUserCommandHandlerTest {
 		when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
 		when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // Act
-		CompletableFuture<UserDto> resultFuture = handler.handle(command);
-		UserDto result = resultFuture.get();
+		// Act
+		UserDto result = handler.handle(command);
 
 		// Assert
 		assertEquals("newpass", existingUser.getPassword());
@@ -137,9 +130,8 @@ public class UpdateUserCommandHandlerTest {
 		when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
 		when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // Act
-		CompletableFuture<UserDto> resultFuture = handler.handle(command);
-		UserDto result = resultFuture.get();
+		// Act
+		UserDto result = handler.handle(command);
 
 		// Assert
 		assertEquals("oldpass", existingUser.getPassword());

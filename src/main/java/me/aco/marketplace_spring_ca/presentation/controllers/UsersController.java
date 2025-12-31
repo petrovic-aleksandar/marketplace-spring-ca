@@ -2,7 +2,6 @@ package me.aco.marketplace_spring_ca.presentation.controllers;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
@@ -13,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.RequiredArgsConstructor;
 import me.aco.marketplace_spring_ca.application.dto.UserDto;
-import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 import me.aco.marketplace_spring_ca.application.usecases.user.command.ActivateUserCommand;
 import me.aco.marketplace_spring_ca.application.usecases.user.command.ActivateUserCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.user.command.AddUserCommand;
@@ -27,9 +26,11 @@ import me.aco.marketplace_spring_ca.application.usecases.user.query.GetAllUsersQ
 import me.aco.marketplace_spring_ca.application.usecases.user.query.GetAllUsersQueryHandler;
 import me.aco.marketplace_spring_ca.application.usecases.user.query.GetUserByIdQuery;
 import me.aco.marketplace_spring_ca.application.usecases.user.query.GetUserByIdQueryHandler;
+import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 
 @RestController
 @RequestMapping("/api/User")
+@RequiredArgsConstructor
 public class UsersController extends BaseController {
 
     private final GetUserByIdQueryHandler getUserByIdQueryHandler;
@@ -39,54 +40,34 @@ public class UsersController extends BaseController {
     private final DeactivateUserCommandHandler deactivateUserCommandHandler;
     private final ActivateUserCommandHandler activateUserCommandHandler;
 
-    public UsersController(GetUserByIdQueryHandler getUserByIdQueryHandler,
-            GetAllUsersQueryHandler getAllUsersQueryHandler,
-            AddUserCommandHandler addUserCommandHandler,
-            UpdateUserCommandHandler updateUserCommandHandler,
-            DeactivateUserCommandHandler deactivateUserCommandHandler,
-            ActivateUserCommandHandler activateUserCommandHandler) {
-        this.getUserByIdQueryHandler = getUserByIdQueryHandler;
-        this.getAllUsersQueryHandler = getAllUsersQueryHandler;
-        this.addUserCommandHandler = addUserCommandHandler;
-        this.updateUserCommandHandler = updateUserCommandHandler;
-        this.deactivateUserCommandHandler = deactivateUserCommandHandler;
-        this.activateUserCommandHandler = activateUserCommandHandler;
-    }
-
     @GetMapping("/{id}")
-    public CompletableFuture<ResponseEntity<UserDto>> getById(@PathVariable Long id) {
-        return getUserByIdQueryHandler.handle(new GetUserByIdQuery(id))
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<UserDto> getById(@PathVariable Long id) {
+        return ok(getUserByIdQueryHandler.handle(new GetUserByIdQuery(id)));
     }
 
     @GetMapping("/")
-    public CompletableFuture<ResponseEntity<List<UserDto>>> getAll() {
-        return getAllUsersQueryHandler.handle(new GetAllUsersQuery())
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<List<UserDto>> getAll() {
+        return ok(getAllUsersQueryHandler.handle(new GetAllUsersQuery()));
     }
 
     @PostMapping
-    public CompletableFuture<ResponseEntity<UserDto>> create(@RequestBody AddUserCommand command) {
-        return addUserCommandHandler.handle(command)
-                .thenApply(this::created);
+    public ResponseEntity<UserDto> create(@RequestBody AddUserCommand command) {
+        return created(addUserCommandHandler.handle(command));
     }
 
     @PostMapping("/{id}")
-    public CompletableFuture<ResponseEntity<UserDto>> update(@PathVariable Long id, @RequestBody UpdateUserCommand command) {
-        return updateUserCommandHandler.handle(UpdateUserCommand.withId(id, command))
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<UserDto> update(@PathVariable Long id, @RequestBody UpdateUserCommand command) {
+        return ok(updateUserCommandHandler.handle(UpdateUserCommand.withId(id, command)));
     }
 
     @PostMapping("/deactivate/{id}")
-    public CompletableFuture<ResponseEntity<UserDto>> deactivate(@PathVariable Long id) {
-        return deactivateUserCommandHandler.handle(new DeactivateUserCommand(id))
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<UserDto> deactivate(@PathVariable Long id) {
+        return ok(deactivateUserCommandHandler.handle(new DeactivateUserCommand(id)));
     }
 
     @PostMapping("/activate/{id}")
-    public CompletableFuture<ResponseEntity<UserDto>> activate(@PathVariable Long id) {
-        return activateUserCommandHandler.handle(new ActivateUserCommand(id))
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<UserDto> activate(@PathVariable Long id) {
+        return ok(activateUserCommandHandler.handle(new ActivateUserCommand(id)));
     }
 
     @GetMapping("/roles")
