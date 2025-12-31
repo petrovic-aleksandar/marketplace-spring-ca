@@ -1,35 +1,45 @@
 package me.aco.marketplace_spring_ca.application.usecases.item.command;
 
-import java.util.concurrent.CompletableFuture;
-
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
 import me.aco.marketplace_spring_ca.application.dto.ItemDto;
 import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
+import me.aco.marketplace_spring_ca.domain.entities.Item;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class DeactivateItemCommandHandler {
 
     private final JpaItemRepository itemRepository;
 
-    public DeactivateItemCommandHandler(JpaItemRepository itemRepository) {
-        this.itemRepository = itemRepository;
+    public ItemDto handle(DeactivateItemCommand command) {
+        var item = fetchItem(command.id());
+
+        checkIfItemInactive(item);
+
+        item.deactivate();
+        item = save(item);
+
+        return new ItemDto(item);
     }
 
-    public CompletableFuture<ItemDto> handle(DeactivateItemCommand command) {
-        return CompletableFuture.supplyAsync(() -> {
-            var item = itemRepository.findById(command.id())
-                    .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
-            if (!item.isActive())
-                throw new BusinessException("Item is already inactive");
-            item.deactivate();
-            return new ItemDto(itemRepository.save(item));
-        });
+    private Item fetchItem(long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+    }
+
+    private void checkIfItemInactive(Item item) {
+        if (!item.isActive())
+            throw new BusinessException("Item is already inactive");
+    }
+
+    private Item save(Item item) {
+        return itemRepository.save(item);
     }
     
 }

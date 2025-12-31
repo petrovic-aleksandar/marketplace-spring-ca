@@ -10,8 +10,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,8 +89,7 @@ public class UpdateItemCommandHandlerTest {
     }
 
     @Test
-    void shouldUpdateItemSuccessfully() throws InterruptedException, ExecutionException {
-
+    void shouldUpdateItemSuccessfully() {
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.of(mockItem));
         when(jpaItemTypeRepository.findById(any())).thenReturn(Optional.of(mockItemType));
@@ -100,62 +97,43 @@ public class UpdateItemCommandHandlerTest {
         when(jpaItemRepository.save(any())).thenReturn(mockItem);
 
         // Act
-        CompletableFuture<ItemDto> future = updateItemCommandHandler.handle(validUpdateItemCommand);
+        ItemDto result = updateItemCommandHandler.handle(validUpdateItemCommand);
 
         // Assert
-        assertNotNull(future);
-        assertDoesNotThrow(() -> future.get());
-        assertTrue(future.get().name().equals("Updated Item"));
+        assertNotNull(result);
+        assertTrue(result.name().equals("Updated Item"));
     }
 
     @Test
     void shouldThrowExceptionIfItemNotFound() {
-
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.empty());
 
-        // Act
-        CompletableFuture<ItemDto> future = updateItemCommandHandler.handle(validUpdateItemCommand);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof ResourceNotFoundException);
+        // Act & Assert
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> updateItemCommandHandler.handle(validUpdateItemCommand));
+        assertNotNull(exception);
     }
 
     @Test
     void shouldThrowExceptionIfItemTypeNotFound() {
-
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.of(mockItem));
-        when(jpaItemTypeRepository.findById(any())).thenReturn(Optional.empty());;
+        when(jpaItemTypeRepository.findById(any())).thenReturn(Optional.empty());
 
-        // Act
-        CompletableFuture<ItemDto> future = updateItemCommandHandler.handle(validUpdateItemCommand);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof ResourceNotFoundException);
+        // Act & Assert
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> updateItemCommandHandler.handle(validUpdateItemCommand));
+        assertNotNull(exception);
     }
 
     @Test
     void shouldThrowExceptionIfUserNotFound() {
-
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.of(mockItem));
         when(jpaItemTypeRepository.findById(any())).thenReturn(Optional.of(mockItemType));
         when(jpaUserRepository.findById(any())).thenReturn(Optional.empty());
 
-        // Act
-        CompletableFuture<ItemDto> future = updateItemCommandHandler.handle(validUpdateItemCommand);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof ResourceNotFoundException);
+        // Act & Assert
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> updateItemCommandHandler.handle(validUpdateItemCommand));
+        assertNotNull(exception);
     }
 }

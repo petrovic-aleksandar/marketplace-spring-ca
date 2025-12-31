@@ -1,17 +1,16 @@
 package me.aco.marketplace_spring_ca.presentation.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -152,15 +151,12 @@ public class ItemControllerTest {
 
         // Arrange
         when(getItemByIdQueryHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(mockItem1));
+            .thenReturn(mockItem1);
 
         // Act & Assert
         mockMvc.perform(get("/api/Item/1"))
-                .andExpect(request().asyncStarted())
-                .andExpect(status().isOk())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Test Item 1"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("Test Item 1"));
     }
 
     @Test
@@ -168,14 +164,11 @@ public class ItemControllerTest {
 
         // Arrange
         when(getItemByIdQueryHandler.handle(any()))
-            .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Item not found")));
+            .thenThrow(new ResourceNotFoundException("Item not found"));
 
         // Act & Assert
         mockMvc.perform(get("/api/Item/1"))
-                .andExpect(request().asyncStarted())
-                .andExpect(status().isOk())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
     
     @Test
@@ -183,17 +176,14 @@ public class ItemControllerTest {
         
         // Arrange
         when(getItemsBySellerQueryHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(mockItems));
+            .thenReturn(mockItems);
 
         // Act & Assert
         mockMvc.perform(get("/api/Item/bySellerId/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Test Item 1"))
-                .andExpect(jsonPath("$[1].name").value("Test Item 2"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].name").value("Test Item 1"))
+            .andExpect(jsonPath("$[1].name").value("Test Item 2"));
     }
 
     @Test
@@ -201,14 +191,11 @@ public class ItemControllerTest {
         
         // Arrange
         when(getItemsBySellerQueryHandler.handle(any()))
-            .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Seller not found")));
+            .thenThrow(new ResourceNotFoundException("Seller not found"));
 
         // Act & Assert
         mockMvc.perform(get("/api/Item/bySellerId/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -216,17 +203,14 @@ public class ItemControllerTest {
         
         // Arrange
         when(getItemsByItemTypeQueryHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(mockItems));
+            .thenReturn(mockItems);
 
         // Act & Assert
         mockMvc.perform(get("/api/Item/byTypeId/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Test Item 1"))
-                .andExpect(jsonPath("$[1].name").value("Test Item 2"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].name").value("Test Item 1"))
+            .andExpect(jsonPath("$[1].name").value("Test Item 2"));
     }
 
     @Test
@@ -234,14 +218,11 @@ public class ItemControllerTest {
         
         // Arrange
         when(getItemsByItemTypeQueryHandler.handle(any()))
-            .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Item type not found")));
+            .thenThrow(new ResourceNotFoundException("Item type not found"));
 
         // Act & Assert
         mockMvc.perform(get("/api/Item/byTypeId/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -249,17 +230,14 @@ public class ItemControllerTest {
 
         // Arrange
         when(addItemCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(mockItem1));
+            .thenReturn(mockItem1);
 
         // Act & Assert
         mockMvc.perform(post("/api/Item")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validAddItemCommand)))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Test Item 1"));
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(validAddItemCommand)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.name").value("Test Item 1"));
     }
 
     @Test
@@ -267,16 +245,13 @@ public class ItemControllerTest {
 
         // Arrange
         when(updateItemCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(mockItem1Updated));
+            .thenReturn(mockItem1Updated);
 
         // Act & Assert
         mockMvc.perform(post("/api/Item/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validUpdateItemCommand)))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isOk());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(validUpdateItemCommand)))
+            .andExpect(status().isOk());
     }
 
     @Test
@@ -284,16 +259,13 @@ public class ItemControllerTest {
 
         // Arrange
         when(updateItemCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Item not found")));
+            .thenThrow(new ResourceNotFoundException("Item not found"));
 
         // Act & Assert
         mockMvc.perform(post("/api/Item/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validUpdateItemCommand)))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isNotFound());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(validUpdateItemCommand)))
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -301,16 +273,13 @@ public class ItemControllerTest {
 
         // Arrange
         when(activateItemCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(mockItem1));
+            .thenReturn(mockItem1);
 
         // Act & Assert
         mockMvc.perform(put("/api/Item/Activate/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Test Item 1"))
-                .andExpect(jsonPath("$.active").value(true));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("Test Item 1"))
+            .andExpect(jsonPath("$.active").value(true));
     }
 
     @Test
@@ -318,13 +287,10 @@ public class ItemControllerTest {
 
         // Arrange
         when(activateItemCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Item not found")));
+            .thenThrow(new ResourceNotFoundException("Item not found"));
         // Act & Assert
         mockMvc.perform(put("/api/Item/Activate/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -332,16 +298,13 @@ public class ItemControllerTest {
         
         // Arrange
         when(deactivateItemCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(mockItem1Inactive));
+            .thenReturn(mockItem1Inactive);
 
         // Act & Assert
         mockMvc.perform(post("/api/Item/Deactivate/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Test Item 1"))
-                .andExpect(jsonPath("$.active").value(false));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("Test Item 1"))
+            .andExpect(jsonPath("$.active").value(false));
     }
 
     @Test
@@ -349,43 +312,32 @@ public class ItemControllerTest {
         
         // Arrange
         when(deactivateItemCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Item not found")));
+            .thenThrow(new ResourceNotFoundException("Item not found"));
         // Act & Assert
         mockMvc.perform(post("/api/Item/Deactivate/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
 
     @Test
     void shouldReturnNoContentWhenDeleteItem() throws Exception {
-        
         // Arrange
-        when(deleteItemCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.completedFuture(null));
+        doNothing().when(deleteItemCommandHandler).handle(any());
 
         // Act & Assert
         mockMvc.perform(post("/api/Item/Delete/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isNoContent());
+            .andExpect(status().isNoContent());
     }
 
     @Test
     void shouldThrowExceptionWhenDeleteItem() throws Exception {
         
         // Arrange
-        when(deleteItemCommandHandler.handle(any()))
-            .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Item not found")));
+        doNothing().when(deleteItemCommandHandler).handle(any());
+        doThrow(new ResourceNotFoundException("Item not found")).when(deleteItemCommandHandler).handle(any());
 
         // Act & Assert
         mockMvc.perform(post("/api/Item/Delete/1"))
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
     
     

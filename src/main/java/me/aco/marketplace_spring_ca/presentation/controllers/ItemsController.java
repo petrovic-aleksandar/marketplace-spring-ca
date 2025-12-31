@@ -1,7 +1,6 @@
 package me.aco.marketplace_spring_ca.presentation.controllers;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.RequiredArgsConstructor;
 import me.aco.marketplace_spring_ca.application.dto.ItemDto;
 import me.aco.marketplace_spring_ca.application.dto.ItemTypeDto;
 import me.aco.marketplace_spring_ca.application.usecases.item.command.ActivateItemCommand;
@@ -35,6 +35,7 @@ import me.aco.marketplace_spring_ca.application.usecases.itemType.query.GetItemT
 
 @RestController
 @RequestMapping("/api/Item")
+@RequiredArgsConstructor
 public class ItemsController extends BaseController {
     
     private final GetItemByIdQueryHandler getItemByIdQueryHandler;
@@ -47,77 +48,49 @@ public class ItemsController extends BaseController {
     private final DeleteItemCommandHandler deleteItemCommandHandler;
     private final GetItemTypesQueryHandler getItemTypesQueryHandler;
 
-    public ItemsController(GetItemByIdQueryHandler getItemByIdQueryHandler,
-            GetItemsByItemTypeQueryHandler getItemsByItemTypeQueryHandler,
-            GetItemsBySellerQueryHandler getItemsBySellerQueryHandler,
-            AddItemCommandHandler addItemCommandHandler,
-            UpdateItemCommandHandler updateItemCommandHandler,
-            DeactivateItemCommandHandler deactivateItemCommandHandler,
-            ActivateItemCommandHandler activateItemCommandHandler,
-            DeleteItemCommandHandler deleteItemCommandHandler,
-            GetItemTypesQueryHandler getItemTypesQueryHandler) {
-        this.getItemByIdQueryHandler = getItemByIdQueryHandler;
-        this.getItemsByItemTypeQueryHandler = getItemsByItemTypeQueryHandler;
-        this.getItemsBySellerQueryHandler = getItemsBySellerQueryHandler;
-        this.addItemCommandHandler = addItemCommandHandler;
-        this.updateItemCommandHandler = updateItemCommandHandler;
-        this.deactivateItemCommandHandler = deactivateItemCommandHandler;
-        this.activateItemCommandHandler = activateItemCommandHandler;
-        this.deleteItemCommandHandler = deleteItemCommandHandler;
-        this.getItemTypesQueryHandler = getItemTypesQueryHandler;
-    }
-
     @GetMapping("/{id}")
-    public CompletableFuture<ResponseEntity<ItemDto>> getItemById(@PathVariable Long id) {
-        return getItemByIdQueryHandler.handle(new GetItemByIdQuery(id))
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<ItemDto> getItemById(@PathVariable Long id) {
+        return ok(getItemByIdQueryHandler.handle(new GetItemByIdQuery(id)));
     }
 
     @GetMapping("/bySellerId/{sellerId}")
-    public CompletableFuture<ResponseEntity<List<ItemDto>>> getItemsBySellerId(@PathVariable Long sellerId) {
-        return getItemsBySellerQueryHandler.handle(new GetItemsBySellerQuery(sellerId))
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<List<ItemDto>> getItemsBySellerId(@PathVariable Long sellerId) {
+        return ok(getItemsBySellerQueryHandler.handle(new GetItemsBySellerQuery(sellerId)));
     }
 
     @GetMapping("/byTypeId/{typeId}")
-    public CompletableFuture<ResponseEntity<List<ItemDto>>> getItemsByTypeId(@PathVariable Long typeId) {
-        return getItemsByItemTypeQueryHandler.handle(new GetItemsByItemTypeQuery(typeId))
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<List<ItemDto>> getItemsByTypeId(@PathVariable Long typeId) {
+        return ok(getItemsByItemTypeQueryHandler.handle(new GetItemsByItemTypeQuery(typeId)));
     }
 
     @PostMapping
-    public CompletableFuture<ResponseEntity<ItemDto>> createItem(@RequestBody AddItemCommand command) {
-        return addItemCommandHandler.handle(command)
-                .thenApply(this::created);
+    public ResponseEntity<ItemDto> createItem(@RequestBody AddItemCommand command) {
+        return created(addItemCommandHandler.handle(command));
     }
 
     @PostMapping("/{itemId}")
-    public CompletableFuture<ResponseEntity<ItemDto>> updateItem(@PathVariable Long itemId, @RequestBody UpdateItemCommand command) {
-        return updateItemCommandHandler.handle(UpdateItemCommand.withId(itemId, command))
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<ItemDto> updateItem(@PathVariable Long itemId, @RequestBody UpdateItemCommand command) {
+        return ok(updateItemCommandHandler.handle(UpdateItemCommand.withId(itemId, command)));
     }
 
     @PutMapping("/Deactivate/{id}")
-    public CompletableFuture<ResponseEntity<ItemDto>> deactivateItem(@PathVariable Long id) {
-        return deactivateItemCommandHandler.handle(new DeactivateItemCommand(id))
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<ItemDto> deactivateItem(@PathVariable Long id) {
+        return ok(deactivateItemCommandHandler.handle(new DeactivateItemCommand(id)));
     }
 
     @PutMapping("/Activate/{id}")
-    public CompletableFuture<ResponseEntity<ItemDto>> activateItem(@PathVariable Long id) {
-        return activateItemCommandHandler.handle(new ActivateItemCommand(id))
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<ItemDto> activateItem(@PathVariable Long id) {
+        return ok(activateItemCommandHandler.handle(new ActivateItemCommand(id)));
     }
 
     @PostMapping("/Delete/{id}")
-    public CompletableFuture<ResponseEntity<Void>> deleteItem(@PathVariable Long id) {
-        return deleteItemCommandHandler.handle(new DeleteItemCommand(id))
-                .thenApply(this::noContent);
+    public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
+        deleteItemCommandHandler.handle(new DeleteItemCommand(id));
+        return noContent(null);
     }
 
     @GetMapping("/Types")
-    public CompletableFuture<ResponseEntity<List<ItemTypeDto>>> getItemTypes(GetItemTypesQuery query) {
-        return getItemTypesQueryHandler.handle(query)
-                .thenApply(ResponseEntity::ok);
+    public ResponseEntity<List<ItemTypeDto>> getItemTypes(GetItemTypesQuery query) {
+        return ok(getItemTypesQueryHandler.handle(query));
     }
 }

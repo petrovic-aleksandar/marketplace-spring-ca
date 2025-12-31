@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,8 +74,7 @@ public class DeactivateItemCommandHandlerTest {
     }
 
     @Test
-    void shouldDeactivateItemSuccessfully() throws Exception {
-
+    void shouldDeactivateItemSuccessfully() {
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.of(mockItem));
         when(jpaItemRepository.save(any(Item.class))).thenAnswer(invocation -> {
@@ -87,47 +85,33 @@ public class DeactivateItemCommandHandlerTest {
         DeactivateItemCommand command = new DeactivateItemCommand(1L);
 
         // Act
-        CompletableFuture<ItemDto> future = deactivateItemCommandHandler.handle(command);
+        ItemDto result = deactivateItemCommandHandler.handle(command);
 
         // Assert
-        assertNotNull(future.get());
+        assertNotNull(result);
         assertFalse(mockItem.isActive());
     }
 
     @Test
     void shouldThrowExceptionIfItemNotFound() {
-
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.empty());
         DeactivateItemCommand command = new DeactivateItemCommand(99L);
 
-        // Act
-        CompletableFuture<ItemDto> future = deactivateItemCommandHandler.handle(command);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof ResourceNotFoundException);
+        // Act & Assert
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> deactivateItemCommandHandler.handle(command));
         assertTrue(exception.getMessage().toLowerCase().contains("item not found"));
     }
 
     @Test
     void shouldThrowExceptionIfItemAlreadyInactive() {
-
         // Arrange
         mockItem.setActive(false);
         when(jpaItemRepository.findById(any())).thenReturn(Optional.of(mockItem));
         DeactivateItemCommand command = new DeactivateItemCommand(1L);
 
-        // Act
-        CompletableFuture<ItemDto> future = deactivateItemCommandHandler.handle(command);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof BusinessException);
+        // Act & Assert
+        Exception exception = assertThrows(BusinessException.class, () -> deactivateItemCommandHandler.handle(command));
         assertTrue(exception.getMessage().toLowerCase().contains("already inactive"));
     }
 }

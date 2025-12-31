@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -117,14 +116,9 @@ public class AddItemCommandHandlerTest {
         when(jpaItemTypeRepository.findById(any())).thenReturn(Optional.empty());
 
         // Act
-        CompletableFuture<ItemDto> future = addItemCommandHandler.handle(command);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof ResourceNotFoundException);
-        assertTrue(exception.getMessage().toLowerCase().contains("itemtype not found"));
+        // Act & Assert
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> addItemCommandHandler.handle(command));
+        assertTrue(exception.getMessage().toLowerCase().contains("item type not found"));
     }
 
     @Test
@@ -152,13 +146,8 @@ public class AddItemCommandHandlerTest {
         when(jpaUserRepository.findById(any())).thenReturn(Optional.empty());
 
         // Act
-        CompletableFuture<ItemDto> future = addItemCommandHandler.handle(command);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof ResourceNotFoundException);
+        // Act & Assert
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> addItemCommandHandler.handle(command));
         assertTrue(exception.getMessage().toLowerCase().contains("user not found"));
     }
 
@@ -197,12 +186,8 @@ public class AddItemCommandHandlerTest {
         when(jpaItemRepository.save(any())).thenThrow(new RuntimeException("Save failed"));
 
         // Act
-        CompletableFuture<ItemDto> future = addItemCommandHandler.handle(command);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof RuntimeException);
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> addItemCommandHandler.handle(command));
+        assertTrue(exception.getMessage().toLowerCase().contains("save failed"));
     }
 }

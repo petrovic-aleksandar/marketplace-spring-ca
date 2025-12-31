@@ -1,31 +1,44 @@
 package me.aco.marketplace_spring_ca.application.usecases.item.command;
 
-import java.util.concurrent.CompletableFuture;
-
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
+import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
+import me.aco.marketplace_spring_ca.domain.entities.Item;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class DeleteItemCommandHandler {
 
     private final JpaItemRepository itemRepository;
 
-    public DeleteItemCommandHandler(JpaItemRepository itemRepository) {
-        this.itemRepository = itemRepository;
+    public void handle(DeleteItemCommand command) {
+
+        var item = fetchItem(command.id());
+        checkIfItemDeleted(item);
+
+        item.softDelete();
+        item = save(item);
+
+        return;
     }
 
-    public CompletableFuture<Void> handle(DeleteItemCommand command) {
-        return CompletableFuture.runAsync(() -> {
-            var item = itemRepository.findById(command.id())
-                    .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
-            item.softDelete();
-            itemRepository.save(item);
-        });
+    private Item fetchItem(long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+    }
+
+    private void checkIfItemDeleted(Item item) {
+        if (item.isDeleted())
+            throw new BusinessException("Item is already deleted");
+    }
+
+    private Item save(Item item) {
+        return itemRepository.save(item);
     }
     
 }

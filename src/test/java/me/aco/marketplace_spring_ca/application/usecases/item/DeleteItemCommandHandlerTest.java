@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,37 +72,25 @@ public class DeleteItemCommandHandlerTest {
     }
 
     @Test
-    void shouldDeleteItemSuccessfully() throws Exception {
-
+    void shouldDeleteItemSuccessfully() {
         //  Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.of(mockItem));
         when(jpaItemRepository.save(any())).thenReturn(mockItem);
         DeleteItemCommand command = new DeleteItemCommand(1L);
 
-        // Act
-        CompletableFuture<Void> future = deleteItemCommandHandler.handle(command);
-
-        // Assert
-        assertNotNull(future);
-        assertDoesNotThrow(() -> future.get());
+        // Act & Assert
+        assertDoesNotThrow(() -> deleteItemCommandHandler.handle(command));
         assertTrue(mockItem.isDeleted());
     }
 
     @Test
     void shouldThrowExceptionIfItemNotFound() {
-
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.empty());
         DeleteItemCommand command = new DeleteItemCommand(99L);
 
-        // Act
-        CompletableFuture<Void> future = deleteItemCommandHandler.handle(command);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof ResourceNotFoundException);
+        // Act & Assert
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> deleteItemCommandHandler.handle(command));
         assertTrue(exception.getMessage().toLowerCase().contains("item not found"));
     }
 }

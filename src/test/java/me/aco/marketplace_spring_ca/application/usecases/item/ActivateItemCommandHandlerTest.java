@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,8 +71,7 @@ public class ActivateItemCommandHandlerTest {
     }
 
     @Test
-    void shouldActivateItemSuccessfully() throws Exception {
-
+    void shouldActivateItemSuccessfully() {
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.of(mockItem));
         when(jpaItemRepository.save(any(Item.class))).thenAnswer(invocation -> {
@@ -85,46 +83,32 @@ public class ActivateItemCommandHandlerTest {
         ActivateItemCommand command = new ActivateItemCommand(1L);
 
         // Act
-        CompletableFuture<ItemDto> future = activateItemCommandHandler.handle(command);
+        ItemDto result = activateItemCommandHandler.handle(command);
 
         // Assert
-        assertNotNull(future.get());
+        assertNotNull(result);
         assertTrue(mockItem.isActive());
     }
 
     @Test
     void shouldThrowExceptionIfItemNotFound() {
-
         // Arrange
         when(jpaItemRepository.findById(any())).thenReturn(Optional.empty());
 
-        // Act
+        // Act & Assert
         ActivateItemCommand command = new ActivateItemCommand(99L);
-        CompletableFuture<ItemDto> future = activateItemCommandHandler.handle(command);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof ResourceNotFoundException);
+        assertThrows(ResourceNotFoundException.class, () -> activateItemCommandHandler.handle(command));
     }
 
     @Test
     void shouldThrowExceptionIfItemAlreadyActive() {
-
         // Arrange
         mockItem.setActive(true);
         when(jpaItemRepository.findById(any())).thenReturn(Optional.of(mockItem));
 
-        // Act
+        // Act & Assert
         ActivateItemCommand command = new ActivateItemCommand(1L);
-        CompletableFuture<ItemDto> future = activateItemCommandHandler.handle(command);
-
-        // Assert
-        Exception exception = assertThrows(Exception.class, future::get);
-        Throwable cause = exception.getCause();
-        assertNotNull(cause);
-        assertTrue(cause instanceof BusinessException);
+        Exception exception = assertThrows(BusinessException.class, () -> activateItemCommandHandler.handle(command));
         assertTrue(exception.getMessage().toLowerCase().contains("already active"));
     }
 }
