@@ -1,11 +1,11 @@
 package me.aco.marketplace_spring_ca.application.usecases.transfer.command;
 
 import java.math.BigDecimal;
-import java.util.concurrent.CompletableFuture;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
 import me.aco.marketplace_spring_ca.application.dto.TransferDto;
 import me.aco.marketplace_spring_ca.application.exceptions.BusinessException;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
@@ -16,38 +16,38 @@ import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class AddWithdrawalCommandHandler {
 
     private final JpaTransferRepository transferRepository;
     private final JpaUserRepository userRepository;
 
-    public AddWithdrawalCommandHandler(JpaTransferRepository transferRepository, JpaUserRepository userRepository) {
-        this.transferRepository = transferRepository;
-        this.userRepository = userRepository;
-    }
+    public TransferDto handle(AddWithdrawalCommand command) {
 
-    public CompletableFuture<TransferDto> handle(AddWithdrawalCommand command) {
-        return CompletableFuture.supplyAsync(() -> {
-            
-            validateCommand(command);
+        validateCommand(command);
 
-            var user = fetchUser(command.userId());
+        var user = fetchUser(command.userId());
 
-            validateSufficientBalance(user, command.amount());
-            
-            WithdrawalTransfer transfer = new WithdrawalTransfer();
-            transfer.setUser(user);
-            transfer.setAmount(command.amount());
-            user.deductBalance(command.amount());
+        validateSufficientBalance(user, command.amount());
 
-            transferRepository.save(transfer);
-            userRepository.save(user);
-            
-            return new TransferDto(transfer);
-        });
+        WithdrawalTransfer transfer = new WithdrawalTransfer();
+        transfer.setUser(user);
+        transfer.setAmount(command.amount());
+        user.deductBalance(command.amount());
+
+        transferRepository.save(transfer);
+        userRepository.save(user);
+
+        return new TransferDto(transfer);
     }
 
     private void validateCommand(AddWithdrawalCommand command) {
+        if (command.userId() == null)
+            throw new IllegalArgumentException("User ID cannot be null");
+
+        if (command.amount() == null)
+            throw new IllegalArgumentException("Amount cannot be null");
+
         if (command.amount().compareTo(BigDecimal.ZERO) <= 0)
             throw new IllegalArgumentException("Amount must be greater than zero");
     }

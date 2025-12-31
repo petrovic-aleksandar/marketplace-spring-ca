@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.concurrent.CompletionException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,7 +65,7 @@ public class AddPaymentCommandHandlerTest {
         AddPaymentCommand command = new AddPaymentCommand(1L, new BigDecimal("100.0"));
 
         // Act
-        TransferDto result = addPaymentCommandHandler.handle(command).get();
+        TransferDto result = addPaymentCommandHandler.handle(command);
 
         // Assert
         assertNotNull(result);
@@ -82,14 +81,8 @@ public class AddPaymentCommandHandlerTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
         AddPaymentCommand command = new AddPaymentCommand(1L, new BigDecimal("100.0"));
 
-
         // Act & Assert
-        CompletionException thrown = assertThrows(
-            CompletionException.class,
-            () -> addPaymentCommandHandler.handle(command).join()
-        );
-        assertNotNull(thrown.getCause());
-        assertThrows(ResourceNotFoundException.class, () -> { throw thrown.getCause(); });
+        assertThrows(ResourceNotFoundException.class, () -> addPaymentCommandHandler.handle(command));
     }
 
     @Test
@@ -99,12 +92,7 @@ public class AddPaymentCommandHandlerTest {
         AddPaymentCommand command = new AddPaymentCommand(1L, new BigDecimal("-50.0"));
 
         // Act & Assert
-        CompletionException thrown = assertThrows(
-            CompletionException.class,
-            () -> addPaymentCommandHandler.handle(command).join()
-        );
-        assertNotNull(thrown.getCause());
-        assertThrows(IllegalArgumentException.class, () -> { throw thrown.getCause(); });
+        assertThrows(IllegalArgumentException.class, () -> addPaymentCommandHandler.handle(command));
     }
 
 

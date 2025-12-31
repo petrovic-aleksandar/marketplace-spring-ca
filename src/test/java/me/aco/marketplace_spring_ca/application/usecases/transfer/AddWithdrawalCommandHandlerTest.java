@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.concurrent.CompletionException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,7 +66,7 @@ public class AddWithdrawalCommandHandlerTest {
         AddWithdrawalCommand command = new AddWithdrawalCommand(1L, new BigDecimal("100.0"));
 
         // Act
-        TransferDto result = addWithdrawalCommandHandler.handle(command).get();
+        TransferDto result = addWithdrawalCommandHandler.handle(command);
 
         // Assert
         assertNotNull(result);
@@ -84,13 +83,11 @@ public class AddWithdrawalCommandHandlerTest {
         AddWithdrawalCommand command = new AddWithdrawalCommand(1L, new BigDecimal("300.0"));
 
         // Act & Assert
-        CompletionException thrown = assertThrows(
-            CompletionException.class,
-            () -> addWithdrawalCommandHandler.handle(command).join()
+        BusinessException thrown = assertThrows(
+            BusinessException.class,
+            () -> addWithdrawalCommandHandler.handle(command)
         );
-        assertNotNull(thrown.getCause());
-        assertEquals(BusinessException.class, thrown.getCause().getClass());
-        assertEquals("Insufficient balance", thrown.getCause().getMessage());
+        assertEquals("Insufficient balance", thrown.getMessage());
     }
 
     @Test
@@ -101,12 +98,7 @@ public class AddWithdrawalCommandHandlerTest {
         AddWithdrawalCommand command = new AddWithdrawalCommand(1L, new BigDecimal("100.0"));
 
         // Act & Assert
-        CompletionException thrown = assertThrows(
-            CompletionException.class,
-            () -> addWithdrawalCommandHandler.handle(command).join()
-        );
-        assertNotNull(thrown.getCause());
-        assertEquals(ResourceNotFoundException.class, thrown.getCause().getClass());
+        assertThrows(ResourceNotFoundException.class, () -> addWithdrawalCommandHandler.handle(command));
     }
 
     @Test
@@ -116,12 +108,7 @@ public class AddWithdrawalCommandHandlerTest {
         AddWithdrawalCommand command = new AddWithdrawalCommand(1L, new BigDecimal("-50.0"));
 
         // Act & Assert
-        CompletionException thrown = assertThrows(
-            CompletionException.class,
-            () -> addWithdrawalCommandHandler.handle(command).join()
-        );
-        assertNotNull(thrown.getCause());
-        assertEquals(IllegalArgumentException.class, thrown.getCause().getClass());
+        assertThrows(IllegalArgumentException.class, () -> addWithdrawalCommandHandler.handle(command));
     }
     
 }

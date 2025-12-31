@@ -12,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,7 +71,7 @@ class TransferControllerTest {
 
         // Arrange
         when(getTransfersByUserQueryHandler.handle(any(GetTransfersByUserQuery.class)))
-                .thenReturn(CompletableFuture.completedFuture(List.of(mockTransferDto)));
+                .thenReturn(List.of(mockTransferDto));
 
         // Act
         var mvcResult = mockMvc.perform(get("/api/Transfer/byUserId/1")
@@ -92,7 +91,7 @@ class TransferControllerTest {
 
         // Arrange
         when(getTransfersByUserQueryHandler.handle(any(GetTransfersByUserQuery.class)))
-                .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("User not found")));
+                .thenReturn(List.of(mockTransferDto));
 
         // Act
         var mvcResult = mockMvc.perform(get("/api/Transfer/byUserId/999")
@@ -111,7 +110,7 @@ class TransferControllerTest {
         // Arrange
 		AddPaymentCommand command = new AddPaymentCommand(1L, BigDecimal.valueOf(100.00));
 		when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
-				.thenReturn(CompletableFuture.completedFuture(mockTransferDto));
+				.thenReturn(mockTransferDto);
 
         // Act
 		var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
@@ -131,7 +130,7 @@ class TransferControllerTest {
         // Arrange
         AddPaymentCommand command = new AddPaymentCommand(1L, BigDecimal.valueOf(-50.00));
         when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new IllegalArgumentException("Amount must be positive")));
+                .thenThrow(new IllegalArgumentException("Amount must be positive"));
 
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
@@ -151,7 +150,7 @@ class TransferControllerTest {
         // Arrange
         AddPaymentCommand command = new AddPaymentCommand(999L, BigDecimal.valueOf(100.00));
         when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("User not found")));
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
@@ -171,7 +170,7 @@ class TransferControllerTest {
         // Arrange
 		AddWithdrawalCommand command = new AddWithdrawalCommand(1L, BigDecimal.valueOf(100.00));
 		when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
-				.thenReturn(CompletableFuture.completedFuture(mockTransferDto));
+				.thenReturn(mockTransferDto);
 
         // Act
 		var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
@@ -191,7 +190,7 @@ class TransferControllerTest {
         // Arrange
         AddWithdrawalCommand command = new AddWithdrawalCommand(1L, BigDecimal.valueOf(1000.00));
         when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new IllegalArgumentException("Insufficient balance")));
+                .thenThrow(new IllegalArgumentException("Insufficient balance"));
 
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
@@ -211,7 +210,7 @@ class TransferControllerTest {
         // Arrange
         AddWithdrawalCommand command = new AddWithdrawalCommand(999L, BigDecimal.valueOf(100.00));
         when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("User not found")));
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
@@ -231,7 +230,7 @@ class TransferControllerTest {
         // Arrange
         AddWithdrawalCommand command = new AddWithdrawalCommand(1L, BigDecimal.valueOf(-50.00));
         when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new IllegalArgumentException("Amount must be positive")));
+                .thenThrow(new IllegalArgumentException("Amount must be positive"));
 
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
@@ -250,7 +249,7 @@ class TransferControllerTest {
         // Arrange
         PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
         when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenReturn(CompletableFuture.completedFuture(mockTransferDto));
+                .thenReturn(mockTransferDto);
 
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
@@ -269,7 +268,7 @@ class TransferControllerTest {
         // Arrange
         PurchaseItemCommand command = new PurchaseItemCommand(1L, 999L);
         when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Item not found")));
+                .thenThrow(new ResourceNotFoundException("Item not found"));
         
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
@@ -288,7 +287,7 @@ class TransferControllerTest {
         // Arrange
         PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
         when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new IllegalArgumentException("Insufficient balance")));
+                .thenThrow(new IllegalArgumentException("Insufficient balance"));
         
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
@@ -308,7 +307,7 @@ class TransferControllerTest {
         // Arrange
         PurchaseItemCommand command = new PurchaseItemCommand(999L, 1L);
         when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Buyer not found")));
+                .thenThrow(new ResourceNotFoundException("Buyer not found"));
         
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
@@ -328,7 +327,7 @@ class TransferControllerTest {
         // Arrange
         PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
         when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new IllegalArgumentException("Item is not available for purchase")));
+                .thenThrow(new IllegalArgumentException("Item is not available for purchase"));
         
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
@@ -348,7 +347,7 @@ class TransferControllerTest {
         // Arrange
         PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
         when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new IllegalArgumentException("Item has been deleted")));
+                .thenThrow(new IllegalArgumentException("Item has been deleted"));
         
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
@@ -368,7 +367,7 @@ class TransferControllerTest {
         // Arrange
         PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
         when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new ResourceNotFoundException("Seller not found")));
+                .thenThrow(new ResourceNotFoundException("Seller not found"));
         
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
@@ -388,7 +387,7 @@ class TransferControllerTest {
         // Arrange
         PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
         when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenReturn(CompletableFuture.failedFuture(new IllegalArgumentException("Cannot purchase one's own item")));
+                .thenThrow(new IllegalArgumentException("Cannot purchase one's own item"));
         
         // Act
         var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")

@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.concurrent.CompletionException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,7 +114,7 @@ public class PurchaseItemCommandHandlerTest {
         purchaseItemCommand = new PurchaseItemCommand(1L, 1L);
 
         // Act
-        TransferDto result = purchaseItemCommandHandler.handle(purchaseItemCommand).get();
+        TransferDto result = purchaseItemCommandHandler.handle(purchaseItemCommand);
 
         // Assert
         assertNotNull(result);
@@ -132,12 +131,7 @@ public class PurchaseItemCommandHandlerTest {
         purchaseItemCommand = new PurchaseItemCommand(1L, 1L);
 
         // Act & Assert
-        CompletionException thrown = assertThrows(
-            CompletionException.class,
-            () -> purchaseItemCommandHandler.handle(purchaseItemCommand).join()
-        );
-        assertNotNull(thrown.getCause());
-        assertThrows(ResourceNotFoundException.class, () -> { throw thrown.getCause(); });
+        assertThrows(ResourceNotFoundException.class, () -> purchaseItemCommandHandler.handle(purchaseItemCommand));
     }
 
     @Test
@@ -149,12 +143,7 @@ public class PurchaseItemCommandHandlerTest {
         purchaseItemCommand = new PurchaseItemCommand(1L, 1L);
 
         // Act & Assert
-        CompletionException thrown = assertThrows(
-            CompletionException.class,
-            () -> purchaseItemCommandHandler.handle(purchaseItemCommand).join()
-        );
-        assertNotNull(thrown.getCause());
-        assertThrows(ResourceNotFoundException.class, () -> { throw thrown.getCause(); });
+        assertThrows(ResourceNotFoundException.class, () -> purchaseItemCommandHandler.handle(purchaseItemCommand));
     }
 
     @Test
@@ -167,12 +156,7 @@ public class PurchaseItemCommandHandlerTest {
         purchaseItemCommand = new PurchaseItemCommand(1L, 1L);
 
         // Act & Assert
-        CompletionException thrown = assertThrows(
-            CompletionException.class,
-            () -> purchaseItemCommandHandler.handle(purchaseItemCommand).join()
-        );
-        assertNotNull(thrown.getCause());
-        assertThrows(BusinessException.class, () -> { throw thrown.getCause(); });
+        assertThrows(BusinessException.class, () -> purchaseItemCommandHandler.handle(purchaseItemCommand));
     }
 
     @Test
@@ -185,12 +169,7 @@ public class PurchaseItemCommandHandlerTest {
         purchaseItemCommand = new PurchaseItemCommand(1L, 1L);
 
         // Act & Assert
-        CompletionException thrown = assertThrows(
-            CompletionException.class,
-            () -> purchaseItemCommandHandler.handle(purchaseItemCommand).join()
-        );
-        assertNotNull(thrown.getCause());
-        assertThrows(BusinessException.class, () -> { throw thrown.getCause(); });
+        assertThrows(BusinessException.class, () -> purchaseItemCommandHandler.handle(purchaseItemCommand));
     }
 
     @Test
@@ -203,12 +182,7 @@ public class PurchaseItemCommandHandlerTest {
         purchaseItemCommand = new PurchaseItemCommand(1L, 1L);
 
         // Act & Assert
-        CompletionException thrown = assertThrows(
-            CompletionException.class,
-            () -> purchaseItemCommandHandler.handle(purchaseItemCommand).join()
-        );
-        assertNotNull(thrown.getCause());
-        assertThrows(BusinessException.class, () -> { throw thrown.getCause(); });
+        assertThrows(BusinessException.class, () -> purchaseItemCommandHandler.handle(purchaseItemCommand));
     }
 
     
