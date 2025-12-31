@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -140,7 +141,7 @@ public class ItemControllerTest {
             1L,
             "Test Item 1",
             "Description 1 CHANGED",
-            99.99,
+            BigDecimal.valueOf(99.99),
             1L,
             1L
         );

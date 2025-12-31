@@ -54,7 +54,7 @@ public class UpdateItemCommandHandlerTest {
             1L,
             "Updated Item",
             "Updated Description",
-            199.99,
+            BigDecimal.valueOf(199.99),
             2L,
             2L
         );
