@@ -27,13 +27,35 @@ public class UpdateItemCommandHandler {
 
     public ItemDto handle(UpdateItemCommand command) {
 
+        validateCommand(command);
+
         var item = fetchItem(command.id());
         var itemType = fetchItemType(command.typeId());
         var seller = fetchSeller(command.sellerId());
-        
+
         item = updateItem(item, command, itemType, seller);
         item = itemRepository.save(item);
-        return new ItemDto(item);  
+        return new ItemDto(item);
+    }
+
+    private void validateCommand(UpdateItemCommand command) {
+        if (command.id() == null)
+            throw new IllegalArgumentException("Item ID must not be null");
+
+        if (command.name() == null || command.name().isBlank())
+            throw new IllegalArgumentException("Item name cannot be null or blank");
+
+        if (command.description() == null || command.description().isBlank())
+            throw new IllegalArgumentException("Item description cannot be null or blank");
+
+        if (command.price() == null || command.price().compareTo(BigDecimal.ZERO) < 0)
+            throw new IllegalArgumentException("Item price cannot be null or negative");
+
+        if (command.typeId() == null)
+            throw new IllegalArgumentException("Item type ID must be a positive number");
+
+        if (command.sellerId() == null)
+            throw new IllegalArgumentException("Seller ID must not be null");
     }
 
     private Item fetchItem(long itemId) {
@@ -44,7 +66,7 @@ public class UpdateItemCommandHandler {
     private Item updateItem(Item item, UpdateItemCommand command, ItemType itemType, User seller) {
         item.setName(command.name());
         item.setDescription(command.description());
-        item.setPrice(BigDecimal.valueOf(command.price()));
+        item.setPrice(command.price());
         item.setType(itemType);
         item.setSeller(seller);
         item.setUpdatedAt(LocalDateTime.now());
@@ -60,5 +82,5 @@ public class UpdateItemCommandHandler {
         return userRepository.findById(sellerId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
-    
+
 }

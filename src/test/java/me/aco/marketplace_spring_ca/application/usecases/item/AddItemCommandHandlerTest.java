@@ -16,7 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import me.aco.marketplace_spring_ca.application.dto.ItemDto;
 import me.aco.marketplace_spring_ca.application.exceptions.ResourceNotFoundException;
 import me.aco.marketplace_spring_ca.application.usecases.item.command.AddItemCommand;
 import me.aco.marketplace_spring_ca.application.usecases.item.command.AddItemCommandHandler;
@@ -52,7 +51,7 @@ public class AddItemCommandHandlerTest {
         validAddItemCommand = new AddItemCommand(
             "Test Item",
             "Test Description",
-            99.99,
+            BigDecimal.valueOf(99.99),
             1L,
             1L
         );
@@ -108,7 +107,7 @@ public class AddItemCommandHandlerTest {
         var command = new AddItemCommand(
             "Test Item",
             "Test Description",
-            99.99,
+            BigDecimal.valueOf(99.99),
             1L,
             1L
         );
@@ -128,7 +127,7 @@ public class AddItemCommandHandlerTest {
         var command = new AddItemCommand(
             "Test Item",
             "Test Description",
-            99.99,
+            BigDecimal.valueOf(99.99),
             1L,
             1L
         );
@@ -158,7 +157,7 @@ public class AddItemCommandHandlerTest {
         var command = new AddItemCommand(
             "Test Item",
             "Test Description",
-            99.99,
+            BigDecimal.valueOf(99.99),
             1L,
             1L
         );

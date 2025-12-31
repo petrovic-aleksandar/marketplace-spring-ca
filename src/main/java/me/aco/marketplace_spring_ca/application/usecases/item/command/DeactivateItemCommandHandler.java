@@ -18,6 +18,9 @@ public class DeactivateItemCommandHandler {
     private final JpaItemRepository itemRepository;
 
     public ItemDto handle(DeactivateItemCommand command) {
+
+        validateCommand(command);
+
         var item = fetchItem(command.id());
 
         checkIfItemInactive(item);
@@ -26,6 +29,11 @@ public class DeactivateItemCommandHandler {
         item = save(item);
 
         return new ItemDto(item);
+    }
+
+    private void validateCommand(DeactivateItemCommand command) {
+        if (command.id() == null)
+            throw new IllegalArgumentException("Item ID must not be null");
     }
 
     private Item fetchItem(long itemId) {

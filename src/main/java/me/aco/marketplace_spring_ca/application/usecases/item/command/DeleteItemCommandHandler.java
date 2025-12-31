@@ -18,6 +18,8 @@ public class DeleteItemCommandHandler {
 
     public void handle(DeleteItemCommand command) {
 
+        validateCommand(command);
+
         var item = fetchItem(command.id());
         checkIfItemDeleted(item);
 
@@ -25,6 +27,11 @@ public class DeleteItemCommandHandler {
         item = save(item);
 
         return;
+    }
+
+    private void validateCommand(DeleteItemCommand command) {
+        if (command.id() == null)
+            throw new IllegalArgumentException("Item ID must not be null");
     }
 
     private Item fetchItem(long itemId) {

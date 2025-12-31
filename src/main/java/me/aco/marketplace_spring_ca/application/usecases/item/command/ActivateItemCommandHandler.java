@@ -19,6 +19,8 @@ public class ActivateItemCommandHandler {
 
     public ItemDto handle(ActivateItemCommand command) {
 
+        validateCommand(command);
+
         var item = fetchItem(command.id());
         checkIfItemActive(item);
 
@@ -26,6 +28,11 @@ public class ActivateItemCommandHandler {
         item = save(item);
 
         return new ItemDto(item);
+    }
+
+    private void validateCommand(ActivateItemCommand command) {
+        if (command.id() == null)
+            throw new IllegalArgumentException("Item ID must not be null");
     }
 
     private Item fetchItem(long itemId) {

@@ -1,9 +1,11 @@
 package me.aco.marketplace_spring_ca.application.usecases.item.command;
 
+import java.math.BigDecimal;
+
 public record AddItemCommand(
         String name,
         String description,
-        double price,
-        long typeId,
-        long sellerId
+        BigDecimal price,
+        Long typeId,
+        Long sellerId
 ) {}

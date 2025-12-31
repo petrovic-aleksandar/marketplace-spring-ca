@@ -20,11 +20,19 @@ public class GetItemsBySellerQueryHandler {
     private final JpaUserRepository userRepository;
 
     public List<ItemDto> handle(GetItemsBySellerQuery query) {
+
+        validateQuery(query);
+
         return itemRepository.findBySeller(userRepository.findById(query.sellerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Seller not found")))
                 .stream()
                 .map(ItemDto::new)
                 .toList();
+    }
+
+    private void validateQuery(GetItemsBySellerQuery query) {
+        if (query.sellerId() == null)
+            throw new IllegalArgumentException("Seller ID cannot be null");
     }
 
 }

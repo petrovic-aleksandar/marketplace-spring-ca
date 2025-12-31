@@ -26,12 +26,34 @@ public class AddItemCommandHandler {
 
     public ItemDto handle(AddItemCommand command) {
 
+        validateCommand(command);
+
         var itemType = fetchItemType(command.typeId());
         var seller = fetchSeller(command.sellerId());
-        
+
         var item = toItem(command, itemType, seller);
         item = saveItem(item);
         return new ItemDto(item);
+    }
+
+    private void validateCommand(AddItemCommand command) {
+        if (command.name() == null || command.name().isBlank())
+            throw new IllegalArgumentException("Item name cannot be null or blank");
+
+        if (command.description() == null || command.description().isBlank())
+            throw new IllegalArgumentException("Item description cannot be null or blank");
+
+        if (command.price() == null)
+            throw new IllegalArgumentException("Item price cannot be null");
+
+        if (command.price().compareTo(BigDecimal.ZERO) < 0)
+            throw new IllegalArgumentException("Item price cannot be negative");
+
+        if (command.typeId() == null)
+            throw new IllegalArgumentException("Item type ID cannot be null");
+
+        if (command.sellerId() == null)
+            throw new IllegalArgumentException("Seller ID cannot be null");
     }
 
     private ItemType fetchItemType(long typeId) {
@@ -48,7 +70,7 @@ public class AddItemCommandHandler {
         return new Item(
                 command.name(),
                 command.description(),
-                BigDecimal.valueOf(command.price()),
+                command.price(),
                 itemType,
                 seller);
     }

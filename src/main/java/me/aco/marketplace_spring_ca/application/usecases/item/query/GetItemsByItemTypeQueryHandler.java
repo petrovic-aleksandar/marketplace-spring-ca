@@ -25,6 +25,9 @@ public class GetItemsByItemTypeQueryHandler {
     private final JpaImageRepository imageRepository;
 
     public List<ItemDto> handle(GetItemsByItemTypeQuery query) {
+
+        validateQuery(query);
+
         return itemRepository.findByTypeAndActiveTrue(itemTypeRepository.findById(query.typeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Item type not found")))
                 .stream()
@@ -33,6 +36,11 @@ public class GetItemsByItemTypeQueryHandler {
                     return new ItemDto(item, frontImage.map(ImageDto::new).orElse(null));
                 })
                 .toList();
+    }
+
+    private void validateQuery(GetItemsByItemTypeQuery query) {
+        if (query.typeId() == null)
+            throw new IllegalArgumentException("Item type ID cannot be null");
     }
 
 }

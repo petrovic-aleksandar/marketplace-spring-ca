@@ -16,9 +16,16 @@ public class GetItemByIdQueryHandler {
     private final JpaItemRepository itemRepository;
 
     public ItemDto handle(GetItemByIdQuery query) {
+        validateQuery(query);
+
         return itemRepository.findByIdWithImages(query.id())
                 .map(ItemDto::new)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+    }
+
+    private void validateQuery(GetItemByIdQuery query) {
+        if (query.id() == null)
+            throw new IllegalArgumentException("Item ID cannot be null");
     }
 
 }

@@ -68,7 +68,7 @@ public class AddUserPaymentAndPurchaseItem {
         AddItemCommand addItemCommand = new AddItemCommand(
             "Test Item 1",
             "Description 1",
-            100.00,
+            new BigDecimal("100.00"),
             1L,
             createdUserOpt.get().getId()
         );

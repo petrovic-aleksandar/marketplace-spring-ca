@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -63,7 +65,7 @@ public class AddItemDeactivateActivateAndDelete {
         AddItemCommand addItemCommand = new AddItemCommand(
             "Test Item 1",
             "Description 1",
-            99.99,
+            new BigDecimal("99.99"),
             1L,
             createdUserOpt.get().getId()
         );

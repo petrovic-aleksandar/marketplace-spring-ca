@@ -131,7 +131,7 @@ public class ItemControllerTest {
         validAddItemCommand = new AddItemCommand(
             "Test Item 1",
             "Description 1",
-            99.99,
+            java.math.BigDecimal.valueOf(99.99),
             1L,
             1L
         ); 
