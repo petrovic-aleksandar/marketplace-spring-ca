@@ -30,6 +30,7 @@ public class RegisterUpdateAndLogin {
 
     @Autowired
     private MockMvc mockMvc;
+    
     @Autowired
     private JpaUserRepository userRepository;
     @Autowired
