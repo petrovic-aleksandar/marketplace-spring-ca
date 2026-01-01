@@ -75,22 +75,22 @@ public class ItemsController extends BaseController {
         return ok(updateItemCommandHandler.handle(UpdateItemCommand.withId(itemId, command)));
     }
 
-    @PutMapping("/Deactivate/{id}")
+    @PutMapping("/Deactivate/{itemId}")
     @ItemOwner
-    public ResponseEntity<ItemDto> deactivateItem(@PathVariable Long id) {
-        return ok(deactivateItemCommandHandler.handle(new DeactivateItemCommand(id)));
+    public ResponseEntity<ItemDto> deactivateItem(@PathVariable Long itemId) {
+        return ok(deactivateItemCommandHandler.handle(new DeactivateItemCommand(itemId)));
     }
 
-    @PutMapping("/Activate/{id}")
+    @PutMapping("/Activate/{itemId}")
     @ItemOwner
-    public ResponseEntity<ItemDto> activateItem(@PathVariable Long id) {
-        return ok(activateItemCommandHandler.handle(new ActivateItemCommand(id)));
+    public ResponseEntity<ItemDto> activateItem(@PathVariable Long itemId) {
+        return ok(activateItemCommandHandler.handle(new ActivateItemCommand(itemId)));
     }
 
-    @PostMapping("/Delete/{id}")
+    @PostMapping("/Delete/{itemId}")
     @ItemOwner
-    public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
-        deleteItemCommandHandler.handle(new DeleteItemCommand(id));
+    public ResponseEntity<Void> deleteItem(@PathVariable Long itemId) {
+        deleteItemCommandHandler.handle(new DeleteItemCommand(itemId));
         return noContent(null);
     }
 
