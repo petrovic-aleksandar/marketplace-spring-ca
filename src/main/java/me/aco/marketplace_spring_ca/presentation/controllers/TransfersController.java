@@ -20,6 +20,9 @@ import me.aco.marketplace_spring_ca.application.usecases.transfer.command.Purcha
 import me.aco.marketplace_spring_ca.application.usecases.transfer.command.PurchaseItemCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.transfer.query.GetTransfersByUserQuery;
 import me.aco.marketplace_spring_ca.application.usecases.transfer.query.GetTransfersByUserQueryHandler;
+import me.aco.marketplace_spring_ca.infrastructure.security.PaymentOwner;
+import me.aco.marketplace_spring_ca.infrastructure.security.PurchaseOwner;
+import me.aco.marketplace_spring_ca.infrastructure.security.WithdrawalOwner;
 
 @RestController
 @RequestMapping("/api/Transfer")
@@ -37,16 +40,19 @@ public class TransfersController extends BaseController {
     }
 
     @PostMapping("/payment")
+    @PaymentOwner
     public ResponseEntity<TransferDto> addPayment(@RequestBody AddPaymentCommand command) {
         return created(addPaymentCommandHandler.handle(command));
     }
 
     @PostMapping("/withdrawal")
+    @WithdrawalOwner
     public ResponseEntity<TransferDto> addWithdrawal(@RequestBody AddWithdrawalCommand command) {
         return created(addWithdrawalCommandHandler.handle(command));
     }
 
     @PostMapping("/purchase")
+    @PurchaseOwner
     public ResponseEntity<TransferDto> addPurchase(@RequestBody PurchaseItemCommand command) {
         return created(purchaseItemCommandHandler.handle(command));
     }
