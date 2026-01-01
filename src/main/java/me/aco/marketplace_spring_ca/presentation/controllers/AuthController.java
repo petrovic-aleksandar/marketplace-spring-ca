@@ -2,6 +2,7 @@ package me.aco.marketplace_spring_ca.presentation.controllers;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +19,9 @@ import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCo
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.UpdateSelfCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.UpdateSelfCommandHandler;
+import me.aco.marketplace_spring_ca.infrastructure.security.SelfOwner;
 
 @RestController
 @RequestMapping("/api/Auth")
@@ -28,6 +32,7 @@ public class AuthController extends BaseController {
     private final RegisterCommandHandler registerCommandHandler;
     private final RefreshTokenCommandHandler refreshTokenCommandHandler;
     private final RevokeTokenCommandHandler revokeTokenCommandHandler;
+    private final UpdateSelfCommandHandler updateSelfCommandHandler;
 
     @GetMapping("/ping")
     public String ping() {
@@ -53,4 +58,11 @@ public class AuthController extends BaseController {
     public ResponseEntity<Long> revokeToken(@RequestBody RevokeTokenCommand command) {
         return ok(revokeTokenCommandHandler.handle(command));
     }
+
+    @PostMapping(value = "/update-self/{id}")
+    @SelfOwner
+    public ResponseEntity<UserDto> updateSelf(@PathVariable Long id, @RequestBody UpdateSelfCommand command) {
+        return ok(updateSelfCommandHandler.handle(UpdateSelfCommand.withId(id, command)));
+    }
+    
 }
