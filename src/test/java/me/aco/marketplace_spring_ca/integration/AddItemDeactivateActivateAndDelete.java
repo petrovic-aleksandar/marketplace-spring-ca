@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,12 +40,17 @@ public class AddItemDeactivateActivateAndDelete {
 
     @Test
     void testAddItemDeactivateActivateAndDelete() throws Exception {
+
+        String suffix = UUID.randomUUID().toString();
+        String username = "newuser_" + suffix;
+        String email = "newuser_" + suffix + "@example.com";
+        String itemName = "Test Item 1 " + suffix;
         
         // Step 1: Create new User
         RegisterCommand registerCommand = new RegisterCommand(
-                "newuser",
+            username,
                 "password123",
-                "newuser@example.com",
+            email,
                 "New User",
                 "555-9999"
         );
@@ -55,11 +61,11 @@ public class AddItemDeactivateActivateAndDelete {
             .andExpect(status().isCreated());
 
         // Assert user created
-        var createdUserOpt = jpaUserRepository.findSingleByUsername("newuser");
+        var createdUserOpt = jpaUserRepository.findSingleByUsername(username);
         assertTrue(createdUserOpt.isPresent());
 
         // Step 2: Login and get JWT token
-        LoginCommand loginCommand = new LoginCommand("newuser", "password123");
+        LoginCommand loginCommand = new LoginCommand(username, "password123");
         var loginResponse = mockMvc.perform(post("/api/Auth/login")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(loginCommand)))
@@ -71,7 +77,7 @@ public class AddItemDeactivateActivateAndDelete {
 
         // Step 3: Add a new item
         AddItemCommand addItemCommand = new AddItemCommand(
-            "Test Item 1",
+            itemName,
             "Description 1",
             new BigDecimal("99.99"),
             1L,
@@ -86,7 +92,7 @@ public class AddItemDeactivateActivateAndDelete {
 
         // Assert item created
         var createdItemOpt = jpaItemRepository.findBySeller(createdUserOpt.get()).stream()
-            .filter(i -> i.getName().equals("Test Item 1"))
+            .filter(i -> i.getName().equals(itemName))
             .findFirst();
         assertTrue(createdItemOpt.isPresent());
 

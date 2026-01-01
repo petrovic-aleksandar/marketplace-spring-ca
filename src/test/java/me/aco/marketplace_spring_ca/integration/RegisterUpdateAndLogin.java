@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,11 +43,16 @@ public class RegisterUpdateAndLogin {
     @Test
     public void testRegisterUpdateAndLogin() throws Exception {
 
+        String suffix = UUID.randomUUID().toString();
+        String username = "newuser_" + suffix;
+        String email = "user_" + suffix + "@example.com";
+        String updatedEmail = "updateduser_" + suffix + "@example.com";
+
         // Step 1: Register a new user
         RegisterCommand registerCommand = new RegisterCommand(
-                "newuser",
+                username,
                 "password123",
-                "newuser@example.com",
+                email,
                 "New User",
                 "555-9999");
 
@@ -56,14 +63,14 @@ public class RegisterUpdateAndLogin {
                 .andExpect(status().isCreated());
 
         // Assert password is hashed in repository
-        var registeredUserOpt = userRepository.findSingleByUsername("newuser");
+        var registeredUserOpt = userRepository.findSingleByUsername(username);
         assertEquals(true, registeredUserOpt.isPresent(), "User should exist in repository after registration");
         assertTrue(passwordHasher.verify("password123", registeredUserOpt.get().getPassword()),
                 "Password should match after registration");
 
         // Step 2: Login with a newly created user
         LoginCommand loginCommand = new LoginCommand(
-                "newuser",
+                username,
                 "password123");
 
         // Perform login
@@ -82,17 +89,17 @@ public class RegisterUpdateAndLogin {
         String jwtToken = "Bearer " + tokenDto.accessToken();
 
         // Step 3: Verify user exists in repository
-        var userOpt = userRepository.findSingleByUsername("newuser");
+        var userOpt = userRepository.findSingleByUsername(username);
         assertEquals(true, userOpt.isPresent(), "User should exist in repository after registration");
 
         // Step 4: Update user
         UpdateUserCommand command = new UpdateUserCommand(
                 userOpt.get().getId(),
-                "newuser",
+                username,
                 false,
                 "",
                 "Updated User",
-                "updateduser@example.com",
+                updatedEmail,
                 "555-1111",
                 "ADMIN");
 
@@ -106,11 +113,11 @@ public class RegisterUpdateAndLogin {
         // Step 5: Change password
         UpdateUserCommand updCommand = new UpdateUserCommand(
                 userOpt.get().getId(),
-                "newuser",
+                username,
                 true,
                 "updatedPassword123",
                 "Updated User",
-                "updateduser@example.com",
+                updatedEmail,
                 "555-1111",
                 "ADMIN");
 
@@ -122,14 +129,14 @@ public class RegisterUpdateAndLogin {
                 .andExpect(status().isOk());
 
         // Assert password is changed in repository
-        var updatedUserOpt = userRepository.findSingleByUsername("newuser");
+        var updatedUserOpt = userRepository.findSingleByUsername(username);
         assertTrue(updatedUserOpt.isPresent(), "User should exist after password update");
         assertTrue(passwordHasher.verify("updatedPassword123", updatedUserOpt.get().getPassword()),
                 "Password should match after update");
 
         // Step 6: Login with the updated password
         LoginCommand loginCommand2 = new LoginCommand(
-                "newuser",
+                username,
                 "updatedPassword123");
 
         // Perform login
