@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-// ...existing code...
 
 import me.aco.marketplace_spring_ca.application.dto.UserDto;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.domain.enums.UserRole;
+import me.aco.marketplace_spring_ca.domain.intefrace.PasswordHasher;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +23,8 @@ public class UpdateUserCommandHandlerTest {
 
 	@Mock
 	private JpaUserRepository userRepository;
+	@Mock
+	private PasswordHasher passwordHasher;
 
 	@InjectMocks
 	private UpdateUserCommandHandler handler;
@@ -105,6 +107,7 @@ public class UpdateUserCommandHandlerTest {
 
 		when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
 		when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+		when(passwordHasher.hash("newpass")).thenReturn("newpass");
 
 		// Act
 		UserDto result = handler.handle(command);

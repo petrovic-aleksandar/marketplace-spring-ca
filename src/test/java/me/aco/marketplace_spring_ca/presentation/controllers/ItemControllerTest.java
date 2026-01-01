@@ -310,7 +310,7 @@ public class ItemControllerTest {
             .thenReturn(mockItem1Inactive);
 
         // Act & Assert
-        mockMvc.perform(post("/api/Item/Deactivate/1"))
+        mockMvc.perform(put("/api/Item/Deactivate/1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name").value("Test Item 1"))
             .andExpect(jsonPath("$.active").value(false));
@@ -323,7 +323,7 @@ public class ItemControllerTest {
         when(deactivateItemCommandHandler.handle(any()))
             .thenThrow(new ResourceNotFoundException("Item not found"));
         // Act & Assert
-        mockMvc.perform(post("/api/Item/Deactivate/1"))
+        mockMvc.perform(put("/api/Item/Deactivate/1"))
             .andExpect(status().isNotFound());
     }
 

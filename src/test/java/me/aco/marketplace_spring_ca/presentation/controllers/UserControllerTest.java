@@ -99,7 +99,7 @@ public class UserControllerTest {
         when(getAllUsersQueryHandler.handle(any())).thenReturn(users);
         
         // Act & Assert
-        mockMvc.perform(get("/api/User/ "))
+        mockMvc.perform(get("/api/User/"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(1));
     }

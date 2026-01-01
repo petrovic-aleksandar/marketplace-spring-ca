@@ -2,11 +2,9 @@ package me.aco.marketplace_spring_ca.presentation.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
@@ -18,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -34,7 +33,6 @@ import me.aco.marketplace_spring_ca.application.usecases.transfer.command.Purcha
 import me.aco.marketplace_spring_ca.application.usecases.transfer.query.GetTransfersByUserQuery;
 import me.aco.marketplace_spring_ca.application.usecases.transfer.query.GetTransfersByUserQueryHandler;
 import me.aco.marketplace_spring_ca.infrastructure.security.JwtTokenService;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 @WebMvcTest(TransfersController.class)
 class TransferControllerTest {
@@ -80,14 +78,9 @@ class TransferControllerTest {
                 when(getTransfersByUserQueryHandler.handle(any(GetTransfersByUserQuery.class)))
                                 .thenReturn(List.of(mockTransferDto));
 
-                // Act
-                var mvcResult = mockMvc.perform(get("/api/Transfer/byUserId/1")
+                // Act & Assert
+                mockMvc.perform(get("/api/Transfer/byUserId/1")
                                 .contentType(MediaType.APPLICATION_JSON))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$[0].id").value(mockTransferDto.id()))
                                 .andExpect(jsonPath("$[0].amount").value(mockTransferDto.amount()));
@@ -98,16 +91,11 @@ class TransferControllerTest {
 
                 // Arrange
                 when(getTransfersByUserQueryHandler.handle(any(GetTransfersByUserQuery.class)))
-                                .thenReturn(List.of(mockTransferDto));
+                                .thenThrow(new ResourceNotFoundException("User not found"));
 
-                // Act
-                var mvcResult = mockMvc.perform(get("/api/Transfer/byUserId/999")
+                // Act & Assert
+                mockMvc.perform(get("/api/Transfer/byUserId/999")
                                 .contentType(MediaType.APPLICATION_JSON))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isNotFound());
         }
 
@@ -119,15 +107,10 @@ class TransferControllerTest {
                 when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
                                 .thenReturn(mockTransferDto);
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/payment")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isCreated());
         }
 
@@ -139,15 +122,10 @@ class TransferControllerTest {
                 when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
                                 .thenThrow(new IllegalArgumentException("Amount must be positive"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/payment")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isBadRequest());
         }
 
@@ -159,15 +137,10 @@ class TransferControllerTest {
                 when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
                                 .thenThrow(new ResourceNotFoundException("User not found"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/payment")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isNotFound());
         }
 
@@ -179,15 +152,10 @@ class TransferControllerTest {
                 when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
                                 .thenReturn(mockTransferDto);
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/withdrawal")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isCreated());
         }
 
@@ -199,15 +167,10 @@ class TransferControllerTest {
                 when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
                                 .thenThrow(new IllegalArgumentException("Insufficient balance"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/withdrawal")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isBadRequest());
         }
 
@@ -219,15 +182,10 @@ class TransferControllerTest {
                 when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
                                 .thenThrow(new ResourceNotFoundException("User not found"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/withdrawal")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isNotFound());
         }
 
@@ -239,15 +197,10 @@ class TransferControllerTest {
                 when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
                                 .thenThrow(new IllegalArgumentException("Amount must be positive"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/withdrawal")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isBadRequest());
         }
 
@@ -258,15 +211,10 @@ class TransferControllerTest {
                 when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
                                 .thenReturn(mockTransferDto);
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/purchase")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isCreated());
         }
 
@@ -277,15 +225,10 @@ class TransferControllerTest {
                 when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
                                 .thenThrow(new ResourceNotFoundException("Item not found"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/purchase")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isNotFound());
         }
 
@@ -296,15 +239,10 @@ class TransferControllerTest {
                 when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
                                 .thenThrow(new IllegalArgumentException("Insufficient balance"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/purchase")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isBadRequest());
         }
 
@@ -316,15 +254,10 @@ class TransferControllerTest {
                 when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
                                 .thenThrow(new ResourceNotFoundException("Buyer not found"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/purchase")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isNotFound());
         }
 
@@ -336,15 +269,10 @@ class TransferControllerTest {
                 when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
                                 .thenThrow(new IllegalArgumentException("Item is not available for purchase"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/purchase")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isBadRequest());
         }
 
@@ -356,15 +284,10 @@ class TransferControllerTest {
                 when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
                                 .thenThrow(new IllegalArgumentException("Item has been deleted"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/purchase")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isBadRequest());
         }
 
@@ -376,15 +299,10 @@ class TransferControllerTest {
                 when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
                                 .thenThrow(new ResourceNotFoundException("Seller not found"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/purchase")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isNotFound());
         }
 
@@ -396,15 +314,10 @@ class TransferControllerTest {
                 when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
                                 .thenThrow(new IllegalArgumentException("Cannot purchase one's own item"));
 
-                // Act
-                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                // Act & Assert
+                mockMvc.perform(post("/api/Transfer/purchase")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(command)))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Assert
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isBadRequest());
         }
 
