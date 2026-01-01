@@ -21,6 +21,8 @@ import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeToke
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.UpdateSelfCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.UpdateSelfCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.user.query.GetUserByIdQuery;
+import me.aco.marketplace_spring_ca.application.usecases.user.query.GetUserByIdQueryHandler;
 import me.aco.marketplace_spring_ca.infrastructure.security.SelfOwner;
 
 @RestController
@@ -33,6 +35,7 @@ public class AuthController extends BaseController {
     private final RefreshTokenCommandHandler refreshTokenCommandHandler;
     private final RevokeTokenCommandHandler revokeTokenCommandHandler;
     private final UpdateSelfCommandHandler updateSelfCommandHandler;
+    private final GetUserByIdQueryHandler getUserByIdQueryHandler;
 
     @GetMapping("/ping")
     public String ping() {
@@ -59,10 +62,16 @@ public class AuthController extends BaseController {
         return ok(revokeTokenCommandHandler.handle(command));
     }
 
+    @GetMapping(value = "/self-info/{id}")
+    @SelfOwner
+    public ResponseEntity<UserDto> getSelf(@PathVariable Long id) {
+        return ok(getUserByIdQueryHandler.handle(new GetUserByIdQuery(id)));
+    }
+
     @PostMapping(value = "/update-self/{id}")
     @SelfOwner
     public ResponseEntity<UserDto> updateSelf(@PathVariable Long id, @RequestBody UpdateSelfCommand command) {
         return ok(updateSelfCommandHandler.handle(UpdateSelfCommand.withId(id, command)));
     }
-    
+
 }

@@ -18,6 +18,6 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('USER') and @selfOwnershipService.isOwnProfile(#id, authentication.principal)")
+@PreAuthorize("@selfOwnershipService.isOwnProfile(#id, authentication.principal)")
 public @interface SelfOwner {
 }
