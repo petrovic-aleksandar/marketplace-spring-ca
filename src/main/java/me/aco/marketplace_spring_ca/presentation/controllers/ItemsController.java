@@ -32,6 +32,7 @@ import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemsBySe
 import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemsBySellerQueryHandler;
 import me.aco.marketplace_spring_ca.application.usecases.itemType.query.GetItemTypesQuery;
 import me.aco.marketplace_spring_ca.application.usecases.itemType.query.GetItemTypesQueryHandler;
+import me.aco.marketplace_spring_ca.infrastructure.security.ItemOwner;
 
 @RestController
 @RequestMapping("/api/Item")
@@ -69,21 +70,25 @@ public class ItemsController extends BaseController {
     }
 
     @PostMapping("/{itemId}")
+    @ItemOwner
     public ResponseEntity<ItemDto> updateItem(@PathVariable Long itemId, @RequestBody UpdateItemCommand command) {
         return ok(updateItemCommandHandler.handle(UpdateItemCommand.withId(itemId, command)));
     }
 
     @PutMapping("/Deactivate/{id}")
+    @ItemOwner
     public ResponseEntity<ItemDto> deactivateItem(@PathVariable Long id) {
         return ok(deactivateItemCommandHandler.handle(new DeactivateItemCommand(id)));
     }
 
     @PutMapping("/Activate/{id}")
+    @ItemOwner
     public ResponseEntity<ItemDto> activateItem(@PathVariable Long id) {
         return ok(activateItemCommandHandler.handle(new ActivateItemCommand(id)));
     }
 
     @PostMapping("/Delete/{id}")
+    @ItemOwner
     public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
         deleteItemCommandHandler.handle(new DeleteItemCommand(id));
         return noContent(null);
