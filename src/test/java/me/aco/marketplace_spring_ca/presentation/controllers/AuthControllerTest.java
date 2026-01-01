@@ -32,6 +32,8 @@ import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeToke
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommandHandler;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.domain.enums.UserRole;
+import me.aco.marketplace_spring_ca.infrastructure.security.JwtTokenService;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 @WebMvcTest(AuthController.class)
 class AuthControllerTest {
@@ -43,15 +45,18 @@ class AuthControllerTest {
 
     @MockitoBean
     private LoginCommandHandler loginCommandHandler;
-
     @MockitoBean
     private RegisterCommandHandler registerCommandHandler;
-
     @MockitoBean
     private RefreshTokenCommandHandler refreshTokenCommandHandler;
-
     @MockitoBean
     private RevokeTokenCommandHandler revokeTokenCommandHandler;
+
+    //these two are needed for security context
+    @MockitoBean
+    private UserDetailsService userDetailsService;
+    @MockitoBean
+    private JwtTokenService jwtTokenService;
 
     private TokenDto mockTokenDto;
     private UserDto mockUserDto;

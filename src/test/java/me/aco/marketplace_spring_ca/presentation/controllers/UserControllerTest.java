@@ -27,6 +27,8 @@ import me.aco.marketplace_spring_ca.application.usecases.user.command.UpdateUser
 import me.aco.marketplace_spring_ca.application.usecases.user.command.UpdateUserCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.user.query.GetAllUsersQueryHandler;
 import me.aco.marketplace_spring_ca.application.usecases.user.query.GetUserByIdQueryHandler;
+import me.aco.marketplace_spring_ca.infrastructure.security.JwtTokenService;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 @WebMvcTest(UsersController.class)
 public class UserControllerTest {
@@ -48,6 +50,12 @@ public class UserControllerTest {
     private DeactivateUserCommandHandler deactivateUserCommandHandler;
     @MockitoBean
     private ActivateUserCommandHandler activateUserCommandHandler;
+
+    //these two are needed for security context
+    @MockitoBean
+    private UserDetailsService userDetailsService;
+    @MockitoBean
+    private JwtTokenService jwtTokenService;
 
     @Test
     void testGetUserById() throws Exception {

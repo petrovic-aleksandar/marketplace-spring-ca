@@ -36,6 +36,8 @@ import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemByIdQ
 import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemsByItemTypeQueryHandler;
 import me.aco.marketplace_spring_ca.application.usecases.item.query.GetItemsBySellerQueryHandler;
 import me.aco.marketplace_spring_ca.application.usecases.itemType.query.GetItemTypesQueryHandler;
+import me.aco.marketplace_spring_ca.infrastructure.security.JwtTokenService;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 @WebMvcTest(ItemsController.class)
 public class ItemControllerTest {
@@ -61,6 +63,12 @@ public class ItemControllerTest {
     private DeleteItemCommandHandler deleteItemCommandHandler;
     @MockitoBean
     private GetItemTypesQueryHandler getItemTypesQueryHandler;
+
+    //these two are needed for security context
+    @MockitoBean
+    private UserDetailsService userDetailsService;
+    @MockitoBean
+    private JwtTokenService jwtTokenService;
 
     private ItemDto mockItem1;
     private ItemDto mockItem1Updated;

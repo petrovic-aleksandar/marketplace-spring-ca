@@ -33,372 +33,379 @@ import me.aco.marketplace_spring_ca.application.usecases.transfer.command.Purcha
 import me.aco.marketplace_spring_ca.application.usecases.transfer.command.PurchaseItemCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.transfer.query.GetTransfersByUserQuery;
 import me.aco.marketplace_spring_ca.application.usecases.transfer.query.GetTransfersByUserQueryHandler;
+import me.aco.marketplace_spring_ca.infrastructure.security.JwtTokenService;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 @WebMvcTest(TransfersController.class)
 class TransferControllerTest {
 
-	@Autowired
-	private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-	private ObjectMapper objectMapper = new ObjectMapper();
+        private ObjectMapper objectMapper = new ObjectMapper();
 
-	@MockitoBean
-	private GetTransfersByUserQueryHandler getTransfersByUserQueryHandler;
-	@MockitoBean
-	private AddPaymentCommandHandler addPaymentCommandHandler;
-	@MockitoBean
-	private AddWithdrawalCommandHandler addWithdrawalCommandHandler;
-	@MockitoBean
-	private PurchaseItemCommandHandler purchaseItemCommandHandler;
+        @MockitoBean
+        private GetTransfersByUserQueryHandler getTransfersByUserQueryHandler;
+        @MockitoBean
+        private AddPaymentCommandHandler addPaymentCommandHandler;
+        @MockitoBean
+        private AddWithdrawalCommandHandler addWithdrawalCommandHandler;
+        @MockitoBean
+        private PurchaseItemCommandHandler purchaseItemCommandHandler;
 
-	private TransferDto mockTransferDto;
+        // these two are needed for security context
+        @MockitoBean
+        private UserDetailsService userDetailsService;
+        @MockitoBean
+        private JwtTokenService jwtTokenService;
 
-	@BeforeEach
-	void setUp() {
-		mockTransferDto = new TransferDto(
-            1L, 
-            BigDecimal.valueOf(100.00), 
-            LocalDateTime.now().toString(),
-            "PAYMENT",
-            null,
-            null,
-            null
-        );
-	}
+        private TransferDto mockTransferDto;
 
-    @Test
-    void testGetTransfersByUser() throws Exception {
+        @BeforeEach
+        void setUp() {
+                mockTransferDto = new TransferDto(
+                                1L,
+                                BigDecimal.valueOf(100.00),
+                                LocalDateTime.now().toString(),
+                                "PAYMENT",
+                                null,
+                                null,
+                                null);
+        }
 
-        // Arrange
-        when(getTransfersByUserQueryHandler.handle(any(GetTransfersByUserQuery.class)))
-                .thenReturn(List.of(mockTransferDto));
+        @Test
+        void testGetTransfersByUser() throws Exception {
 
-        // Act
-        var mvcResult = mockMvc.perform(get("/api/Transfer/byUserId/1")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Arrange
+                when(getTransfersByUserQueryHandler.handle(any(GetTransfersByUserQuery.class)))
+                                .thenReturn(List.of(mockTransferDto));
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(mockTransferDto.id()))
-                .andExpect(jsonPath("$[0].amount").value(mockTransferDto.amount()));
-    }
+                // Act
+                var mvcResult = mockMvc.perform(get("/api/Transfer/byUserId/1")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-    @Test
-    void testGetTransfersByUser_NotFound() throws Exception {
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[0].id").value(mockTransferDto.id()))
+                                .andExpect(jsonPath("$[0].amount").value(mockTransferDto.amount()));
+        }
 
-        // Arrange
-        when(getTransfersByUserQueryHandler.handle(any(GetTransfersByUserQuery.class)))
-                .thenReturn(List.of(mockTransferDto));
+        @Test
+        void testGetTransfersByUser_NotFound() throws Exception {
 
-        // Act
-        var mvcResult = mockMvc.perform(get("/api/Transfer/byUserId/999")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Arrange
+                when(getTransfersByUserQueryHandler.handle(any(GetTransfersByUserQuery.class)))
+                                .thenReturn(List.of(mockTransferDto));
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isNotFound());
-    }
+                // Act
+                var mvcResult = mockMvc.perform(get("/api/Transfer/byUserId/999")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-	@Test
-	void testAddPayment() throws Exception {
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isNotFound());
+        }
 
-        // Arrange
-		AddPaymentCommand command = new AddPaymentCommand(1L, BigDecimal.valueOf(100.00));
-		when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
-				.thenReturn(mockTransferDto);
+        @Test
+        void testAddPayment() throws Exception {
 
-        // Act
-		var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(command)))
-				.andExpect(request().asyncStarted())
-				.andReturn();
+                // Arrange
+                AddPaymentCommand command = new AddPaymentCommand(1L, BigDecimal.valueOf(100.00));
+                when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
+                                .thenReturn(mockTransferDto);
 
-        // Assert
-		mockMvc.perform(asyncDispatch(mvcResult))
-				.andExpect(status().isCreated());
-	}
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-    @Test
-    void testAddPayment_InvalidAmount() throws Exception {
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isCreated());
+        }
 
-        // Arrange
-        AddPaymentCommand command = new AddPaymentCommand(1L, BigDecimal.valueOf(-50.00));
-        when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
-                .thenThrow(new IllegalArgumentException("Amount must be positive"));
+        @Test
+        void testAddPayment_InvalidAmount() throws Exception {
 
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Arrange
+                AddPaymentCommand command = new AddPaymentCommand(1L, BigDecimal.valueOf(-50.00));
+                when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
+                                .thenThrow(new IllegalArgumentException("Amount must be positive"));
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isBadRequest());
-    }
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-    @Test
-    void testAddPayment_UserNotFound() throws Exception {
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isBadRequest());
+        }
 
-        // Arrange
-        AddPaymentCommand command = new AddPaymentCommand(999L, BigDecimal.valueOf(100.00));
-        when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
-                .thenThrow(new ResourceNotFoundException("User not found"));
+        @Test
+        void testAddPayment_UserNotFound() throws Exception {
 
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Arrange
+                AddPaymentCommand command = new AddPaymentCommand(999L, BigDecimal.valueOf(100.00));
+                when(addPaymentCommandHandler.handle(any(AddPaymentCommand.class)))
+                                .thenThrow(new ResourceNotFoundException("User not found"));
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isNotFound());
-    }
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/payment")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-    @Test
-    void testAddWithdrawal() throws Exception {
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isNotFound());
+        }
 
-        // Arrange
-		AddWithdrawalCommand command = new AddWithdrawalCommand(1L, BigDecimal.valueOf(100.00));
-		when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
-				.thenReturn(mockTransferDto);
+        @Test
+        void testAddWithdrawal() throws Exception {
 
-        // Act
-		var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(command)))
-				.andExpect(request().asyncStarted())
-				.andReturn();
+                // Arrange
+                AddWithdrawalCommand command = new AddWithdrawalCommand(1L, BigDecimal.valueOf(100.00));
+                when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
+                                .thenReturn(mockTransferDto);
 
-        // Assert
-		mockMvc.perform(asyncDispatch(mvcResult))
-				.andExpect(status().isCreated());
-    }
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-    @Test
-    void testAddWithdrawal_InsufficientBalance() throws Exception {
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isCreated());
+        }
 
-        // Arrange
-        AddWithdrawalCommand command = new AddWithdrawalCommand(1L, BigDecimal.valueOf(1000.00));
-        when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
-                .thenThrow(new IllegalArgumentException("Insufficient balance"));
+        @Test
+        void testAddWithdrawal_InsufficientBalance() throws Exception {
 
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Arrange
+                AddWithdrawalCommand command = new AddWithdrawalCommand(1L, BigDecimal.valueOf(1000.00));
+                when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
+                                .thenThrow(new IllegalArgumentException("Insufficient balance"));
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isBadRequest());
-    }
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-    @Test
-    void testAddWithdrawal_UserNotFound() throws Exception {
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isBadRequest());
+        }
 
-        // Arrange
-        AddWithdrawalCommand command = new AddWithdrawalCommand(999L, BigDecimal.valueOf(100.00));
-        when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
-                .thenThrow(new ResourceNotFoundException("User not found"));
+        @Test
+        void testAddWithdrawal_UserNotFound() throws Exception {
 
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Arrange
+                AddWithdrawalCommand command = new AddWithdrawalCommand(999L, BigDecimal.valueOf(100.00));
+                when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
+                                .thenThrow(new ResourceNotFoundException("User not found"));
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isNotFound());
-    }
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-    @Test
-    void testAddWithdrawal_InvalidAmount() throws Exception {
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isNotFound());
+        }
 
-        // Arrange
-        AddWithdrawalCommand command = new AddWithdrawalCommand(1L, BigDecimal.valueOf(-50.00));
-        when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
-                .thenThrow(new IllegalArgumentException("Amount must be positive"));
+        @Test
+        void testAddWithdrawal_InvalidAmount() throws Exception {
 
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Arrange
+                AddWithdrawalCommand command = new AddWithdrawalCommand(1L, BigDecimal.valueOf(-50.00));
+                when(addWithdrawalCommandHandler.handle(any(AddWithdrawalCommand.class)))
+                                .thenThrow(new IllegalArgumentException("Amount must be positive"));
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isBadRequest());
-    }
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/withdrawal")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-    @Test
-    void testPurchaseItem() throws Exception {
-        // Arrange
-        PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
-        when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenReturn(mockTransferDto);
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isBadRequest());
+        }
 
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+        @Test
+        void testPurchaseItem() throws Exception {
+                // Arrange
+                PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
+                when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
+                                .thenReturn(mockTransferDto);
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isCreated());
-    }
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-    @Test
-    void testPurchaseItem_ItemNotFound() throws Exception {
-        // Arrange
-        PurchaseItemCommand command = new PurchaseItemCommand(1L, 999L);
-        when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenThrow(new ResourceNotFoundException("Item not found"));
-        
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isCreated());
+        }
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isNotFound()); 
-    }
+        @Test
+        void testPurchaseItem_ItemNotFound() throws Exception {
+                // Arrange
+                PurchaseItemCommand command = new PurchaseItemCommand(1L, 999L);
+                when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
+                                .thenThrow(new ResourceNotFoundException("Item not found"));
 
-    @Test
-    void testPurchaseItem_InsufficientBalance() throws Exception {
-        // Arrange
-        PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
-        when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenThrow(new IllegalArgumentException("Insufficient balance"));
-        
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isBadRequest()); 
-    }
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isNotFound());
+        }
 
-    @Test
-    void testPurchaseItem_BuyerNotFound() throws Exception {
+        @Test
+        void testPurchaseItem_InsufficientBalance() throws Exception {
+                // Arrange
+                PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
+                when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
+                                .thenThrow(new IllegalArgumentException("Insufficient balance"));
 
-        // Arrange
-        PurchaseItemCommand command = new PurchaseItemCommand(999L, 1L);
-        when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenThrow(new ResourceNotFoundException("Buyer not found"));
-        
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isNotFound()); 
-    }
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isBadRequest());
+        }
 
-    @Test
-    void testPurchaseItem_ItemNotAvailable() throws Exception {
+        @Test
+        void testPurchaseItem_BuyerNotFound() throws Exception {
 
-        // Arrange
-        PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
-        when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenThrow(new IllegalArgumentException("Item is not available for purchase"));
-        
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Arrange
+                PurchaseItemCommand command = new PurchaseItemCommand(999L, 1L);
+                when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
+                                .thenThrow(new ResourceNotFoundException("Buyer not found"));
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isBadRequest()); 
-    }
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-    @Test
-    void testPurchaseItem_ItemDeleted() throws Exception {
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isNotFound());
+        }
 
-        // Arrange
-        PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
-        when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenThrow(new IllegalArgumentException("Item has been deleted"));
-        
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+        @Test
+        void testPurchaseItem_ItemNotAvailable() throws Exception {
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isBadRequest()); 
-    }
+                // Arrange
+                PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
+                when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
+                                .thenThrow(new IllegalArgumentException("Item is not available for purchase"));
 
-    @Test
-    void testPurchaseItem_SellerNotFound() throws Exception {
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-        // Arrange
-        PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
-        when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenThrow(new ResourceNotFoundException("Seller not found"));
-        
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isBadRequest());
+        }
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isNotFound()); 
-    }
+        @Test
+        void testPurchaseItem_ItemDeleted() throws Exception {
 
-    @Test
-    void testPurchaseItem_SameBuyerAndSeller() throws Exception {
+                // Arrange
+                PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
+                when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
+                                .thenThrow(new IllegalArgumentException("Item has been deleted"));
 
-        // Arrange
-        PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
-        when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
-                .thenThrow(new IllegalArgumentException("Cannot purchase one's own item"));
-        
-        // Act
-        var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(command)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
 
-        // Assert
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isBadRequest()); 
-    }
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void testPurchaseItem_SellerNotFound() throws Exception {
+
+                // Arrange
+                PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
+                when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
+                                .thenThrow(new ResourceNotFoundException("Seller not found"));
+
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
+
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void testPurchaseItem_SameBuyerAndSeller() throws Exception {
+
+                // Arrange
+                PurchaseItemCommand command = new PurchaseItemCommand(1L, 1L);
+                when(purchaseItemCommandHandler.handle(any(PurchaseItemCommand.class)))
+                                .thenThrow(new IllegalArgumentException("Cannot purchase one's own item"));
+
+                // Act
+                var mvcResult = mockMvc.perform(post("/api/Transfer/purchase")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(command)))
+                                .andExpect(request().asyncStarted())
+                                .andReturn();
+
+                // Assert
+                mockMvc.perform(asyncDispatch(mvcResult))
+                                .andExpect(status().isBadRequest());
+        }
 
 }

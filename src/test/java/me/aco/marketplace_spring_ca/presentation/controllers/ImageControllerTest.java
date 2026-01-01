@@ -24,6 +24,8 @@ import me.aco.marketplace_spring_ca.application.usecases.image.command.AddImageC
 import me.aco.marketplace_spring_ca.application.usecases.image.command.DeleteImageCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.image.command.MakeImangeFrontCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.image.query.GetImagesByItemQueryHandler;
+import me.aco.marketplace_spring_ca.infrastructure.security.JwtTokenService;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 @WebMvcTest(ImageController.class)
 public class ImageControllerTest {
@@ -39,6 +41,12 @@ public class ImageControllerTest {
     private MakeImangeFrontCommandHandler makeImangeFrontCommandHandler;
     @MockitoBean
     private GetImagesByItemQueryHandler getImagesByItemQueryHandler;
+
+    //these two are needed for security context
+    @MockitoBean
+    private UserDetailsService userDetailsService;
+    @MockitoBean
+    private JwtTokenService jwtTokenService;
 
     @Test
     void addImage_returnsImageDto() throws Exception {
