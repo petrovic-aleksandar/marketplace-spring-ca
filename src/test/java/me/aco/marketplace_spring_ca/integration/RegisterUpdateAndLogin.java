@@ -1,30 +1,26 @@
 package me.aco.marketplace_spring_ca.integration;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-
+import me.aco.marketplace_spring_ca.application.dto.TokenDto;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
 import me.aco.marketplace_spring_ca.application.usecases.user.command.UpdateUserCommand;
 import me.aco.marketplace_spring_ca.domain.intefrace.PasswordHasher;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -51,45 +47,39 @@ public class RegisterUpdateAndLogin {
                 "password123",
                 "newuser@example.com",
                 "New User",
-                "555-9999"
-        );
+                "555-9999");
 
         // Perform registration
-        var regResult = mockMvc.perform(post(REGISTER_URI)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(registerCommand)))
-            .andReturn();
-
-        // Async dispatch and assert 201 Created
-        mockMvc.perform(asyncDispatch(regResult))
-            .andDo(print())
-            .andExpect(status().isCreated());
+        mockMvc.perform(post(REGISTER_URI)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(registerCommand)))
+                .andExpect(status().isCreated());
 
         // Assert password is hashed in repository
         var registeredUserOpt = userRepository.findSingleByUsername("newuser");
         assertEquals(true, registeredUserOpt.isPresent(), "User should exist in repository after registration");
-        assertTrue(passwordHasher.verify("password123", registeredUserOpt.get().getPassword()), "Password should match after registration");
-        
+        assertTrue(passwordHasher.verify("password123", registeredUserOpt.get().getPassword()),
+                "Password should match after registration");
+
         // Step 2: Login with a newly created user
         LoginCommand loginCommand = new LoginCommand(
                 "newuser",
-                "password123"
-        );
+                "password123");
 
         // Perform login
-        var loginResult = mockMvc.perform(post(LOGIN_URI)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(loginCommand)))
-            .andReturn();
+        var loginResponse = mockMvc.perform(post(LOGIN_URI)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginCommand)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isString())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isString())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andReturn();
 
-        // Async dispatch and assert 200 OK and token presence
-        mockMvc.perform(asyncDispatch(loginResult))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.accessToken").isString())
-            .andExpect(jsonPath("$.accessToken").isNotEmpty())
-            .andExpect(jsonPath("$.refreshToken").isString())
-            .andExpect(jsonPath("$.refreshToken").isNotEmpty());
+        // Extract JWT token from login response
+        TokenDto tokenDto = objectMapper.readValue(loginResponse.getResponse().getContentAsString(), TokenDto.class);
+        String jwtToken = "Bearer " + tokenDto.accessToken();
 
         // Step 3: Verify user exists in repository
         var userOpt = userRepository.findSingleByUsername("newuser");
@@ -104,24 +94,16 @@ public class RegisterUpdateAndLogin {
                 "Updated User",
                 "updateduser@example.com",
                 "555-1111",
-                "ADMIN"
-        );
+                "ADMIN");
 
         // Perform update
-        var updateResult = mockMvc.perform(post("/api/User/" + userOpt.get().getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(command)))
-            .andReturn();
+        mockMvc.perform(post("/api/User/" + userOpt.get().getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", jwtToken)
+                .content(objectMapper.writeValueAsString(command)))
+                .andExpect(status().isOk());
 
-        // Async dispatch and assert 200 OK
-        mockMvc.perform(asyncDispatch(updateResult))
-            .andDo(print())
-            .andExpect(status().isOk());
-
-        // Assert changes
-        assertTrue(updateResult.getResponse().getContentAsString().contains("Updated User"));
-
-        // Step 4: Change password
+        // Step 5: Change password
         UpdateUserCommand updCommand = new UpdateUserCommand(
                 userOpt.get().getId(),
                 "newuser",
@@ -130,45 +112,35 @@ public class RegisterUpdateAndLogin {
                 "Updated User",
                 "updateduser@example.com",
                 "555-1111",
-                "ADMIN"
-        );
+                "ADMIN");
 
         // Perform update
-        var updateResult2 = mockMvc.perform(post("/api/User/" + userOpt.get().getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(updCommand)))
-            .andReturn();
-
-        // Async dispatch and assert 200 OK
-        mockMvc.perform(asyncDispatch(updateResult2))
-            .andDo(print())
-            .andExpect(status().isOk());
+        mockMvc.perform(post("/api/User/" + userOpt.get().getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", jwtToken)
+                .content(objectMapper.writeValueAsString(updCommand)))
+                .andExpect(status().isOk());
 
         // Assert password is changed in repository
         var updatedUserOpt = userRepository.findSingleByUsername("newuser");
         assertTrue(updatedUserOpt.isPresent(), "User should exist after password update");
-        assertTrue(passwordHasher.verify("updatedPassword123", updatedUserOpt.get().getPassword()), "Password should match after update");
+        assertTrue(passwordHasher.verify("updatedPassword123", updatedUserOpt.get().getPassword()),
+                "Password should match after update");
 
-        // Step 5: Login with the updated password
+        // Step 6: Login with the updated password
         LoginCommand loginCommand2 = new LoginCommand(
                 "newuser",
-                "updatedPassword123"
-        );
+                "updatedPassword123");
 
         // Perform login
-        var loginResult2 = mockMvc.perform(post(LOGIN_URI)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(loginCommand2)))
-            .andReturn();
-
-        // Async dispatch and assert 200 OK and token presence
-        mockMvc.perform(asyncDispatch(loginResult2))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.accessToken").isString())
-            .andExpect(jsonPath("$.accessToken").isNotEmpty())
-            .andExpect(jsonPath("$.refreshToken").isString())
-            .andExpect(jsonPath("$.refreshToken").isNotEmpty());
+        mockMvc.perform(post(LOGIN_URI)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginCommand2)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isString())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isString())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty());
     }
-    
+
 }

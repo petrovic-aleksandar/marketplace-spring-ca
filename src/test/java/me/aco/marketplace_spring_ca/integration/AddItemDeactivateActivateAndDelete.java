@@ -1,10 +1,8 @@
 package me.aco.marketplace_spring_ca.integration;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
@@ -18,6 +16,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import me.aco.marketplace_spring_ca.application.dto.TokenDto;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
 import me.aco.marketplace_spring_ca.application.usecases.item.command.AddItemCommand;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaItemRepository;
@@ -52,16 +52,24 @@ public class AddItemDeactivateActivateAndDelete {
         mockMvc.perform(post("/api/Auth/register")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(registerCommand)))
-            .andExpect(status().isOk())
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isCreated()));
+            .andExpect(status().isCreated());
 
         // Assert user created
         var createdUserOpt = jpaUserRepository.findSingleByUsername("newuser");
         assertTrue(createdUserOpt.isPresent());
 
-        // Step 2: Add a new item
+        // Step 2: Login and get JWT token
+        LoginCommand loginCommand = new LoginCommand("newuser", "password123");
+        var loginResponse = mockMvc.perform(post("/api/Auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(loginCommand)))
+            .andExpect(status().isOk())
+            .andReturn();
+        
+        TokenDto tokenDto = objectMapper.readValue(loginResponse.getResponse().getContentAsString(), TokenDto.class);
+        String jwtToken = "Bearer " + tokenDto.accessToken();
+
+        // Step 3: Add a new item
         AddItemCommand addItemCommand = new AddItemCommand(
             "Test Item 1",
             "Description 1",
@@ -72,11 +80,9 @@ public class AddItemDeactivateActivateAndDelete {
 
         mockMvc.perform(post("/api/Item")
             .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", jwtToken)
             .content(objectMapper.writeValueAsString(addItemCommand)))
-            .andExpect(status().isOk())
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isCreated()));
+            .andExpect(status().isCreated());
 
         // Assert item created
         var createdItemOpt = jpaItemRepository.findBySeller(createdUserOpt.get()).stream()
@@ -84,36 +90,30 @@ public class AddItemDeactivateActivateAndDelete {
             .findFirst();
         assertTrue(createdItemOpt.isPresent());
 
-        // Step 3: Deactivate the item
-        mockMvc.perform(put("/api/Item/Deactivate/" + createdItemOpt.get().getId()))
-            .andExpect(status().isOk())
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isOk()));
+        // Step 4: Deactivate the item
+        mockMvc.perform(put("/api/Item/Deactivate/" + createdItemOpt.get().getId())
+            .header("Authorization", jwtToken))
+            .andExpect(status().isOk());
 
         // Assert item is deactivated
         var deactivatedItemOpt = jpaItemRepository.findById(createdItemOpt.get().getId());
         assertTrue(deactivatedItemOpt.isPresent());
         assertTrue(!deactivatedItemOpt.get().isActive());
 
-        // Step 4: Activate the item
-        mockMvc.perform(put("/api/Item/Activate/" + createdItemOpt.get().getId()))
-            .andExpect(status().isOk())
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isOk()));
+        // Step 5: Activate the item
+        mockMvc.perform(put("/api/Item/Activate/" + createdItemOpt.get().getId())
+            .header("Authorization", jwtToken))
+            .andExpect(status().isOk());
 
         // Assert item is activated
         var activatedItemOpt = jpaItemRepository.findById(createdItemOpt.get().getId());
         assertTrue(activatedItemOpt.isPresent());
         assertTrue(activatedItemOpt.get().isActive());
 
-        // Step 5: Delete the item
-        mockMvc.perform(post("/api/Item/Delete/" + createdItemOpt.get().getId()))
-            .andExpect(status().isOk())
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isNoContent()));
+        // Step 6: Delete the item
+        mockMvc.perform(post("/api/Item/Delete/" + createdItemOpt.get().getId())
+            .header("Authorization", jwtToken))
+            .andExpect(status().isNoContent());
 
     }
     

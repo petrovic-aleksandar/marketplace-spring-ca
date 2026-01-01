@@ -2,11 +2,9 @@ package me.aco.marketplace_spring_ca.integration;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
@@ -21,6 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import me.aco.marketplace_spring_ca.application.dto.TokenDto;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
 import me.aco.marketplace_spring_ca.application.usecases.item.command.AddItemCommand;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaImageRepository;
@@ -58,16 +58,24 @@ public class UploadImgMakeFrontAndDelete {
         mockMvc.perform(post("/api/Auth/register")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(registerCommand)))
-            .andExpect(status().isOk())
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isCreated()));
+            .andExpect(status().isCreated());
 
         // Assert user created
         var createdUserOpt = jpaUserRepository.findSingleByUsername("newuser");
         assertTrue(createdUserOpt.isPresent());
 
-        // Step 2: Create new Item that user sells
+        // Step 2: Login and get JWT token
+        LoginCommand loginCommand = new LoginCommand("newuser", "password123");
+        var loginResponse = mockMvc.perform(post("/api/Auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(loginCommand)))
+            .andExpect(status().isOk())
+            .andReturn();
+        
+        TokenDto tokenDto = objectMapper.readValue(loginResponse.getResponse().getContentAsString(), TokenDto.class);
+        String jwtToken = "Bearer " + tokenDto.accessToken();
+
+        // Step 3: Create new Item that user sells
         AddItemCommand addItemCommand = new AddItemCommand(
             "Test Item 1",
             "Description 1",
@@ -78,11 +86,9 @@ public class UploadImgMakeFrontAndDelete {
 
         mockMvc.perform(post("/api/Item")
             .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", jwtToken)
             .content(objectMapper.writeValueAsString(addItemCommand)))
-            .andExpect(status().isOk())
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isCreated()));
+            .andExpect(status().isCreated());
 
         // Assert item created
         var createdItemOpt = jpaItemRepository.findBySeller(createdUserOpt.get()).stream()
@@ -90,45 +96,39 @@ public class UploadImgMakeFrontAndDelete {
             .findFirst();
         assertTrue(createdItemOpt.isPresent());
 
-        // Step 3: Upload Image for Item
+        // Step 4: Upload Image for Item
         String fileName = "test.jpg";
         MockMultipartFile file = new MockMultipartFile("file", fileName, MediaType.IMAGE_JPEG_VALUE, "dummy".getBytes());
 
         mockMvc.perform(multipart("/api/Image/" + createdItemOpt.get().getId())
                 .file(file)
-                .param("fileName", fileName))
-            .andExpect(status().isOk())
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isCreated()));
+                .param("fileName", fileName)
+                .header("Authorization", jwtToken))
+            .andExpect(status().isCreated());
 
         // Assert image uploaded
         var imagesForItem = jpaImageRepository.findByItemId(createdItemOpt.get().getId());
         assertFalse(imagesForItem.isEmpty());
         var uploadedImage = imagesForItem.get(0);
 
-        // Step 4: Make Image Front
+        // Step 5: Make Image Front
         mockMvc.perform(post("/api/Image/front/" + uploadedImage.getId())
             .param("imageId", String.valueOf(uploadedImage.getId()))
+            .header("Authorization", jwtToken)
             .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isOk()));
+            .andExpect(status().isOk());
         
         // Assert image is front
         var frontImageOpt = jpaImageRepository.findById(uploadedImage.getId());
         assertTrue(frontImageOpt.isPresent());
         assertTrue(frontImageOpt.get().isFront());
 
-        // Step 5: Delete Image
+        // Step 6: Delete Image
         mockMvc.perform(delete("/api/Image/" + uploadedImage.getId())
             .param("imageId", String.valueOf(uploadedImage.getId()))
+            .header("Authorization", jwtToken)
             .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(request().asyncStarted())
-            .andDo(result -> mockMvc.perform(asyncDispatch(result))
-            .andExpect(status().isNoContent()));
+            .andExpect(status().isNoContent());
 
         // Assert image deleted
         var deletedImageOpt = jpaImageRepository.findById(uploadedImage.getId());
