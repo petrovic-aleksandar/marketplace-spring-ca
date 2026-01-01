@@ -23,6 +23,8 @@ import me.aco.marketplace_spring_ca.application.usecases.image.command.MakeImage
 import me.aco.marketplace_spring_ca.application.usecases.image.command.MakeImangeFrontCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.image.query.GetImagesByItemQuery;
 import me.aco.marketplace_spring_ca.application.usecases.image.query.GetImagesByItemQueryHandler;
+import me.aco.marketplace_spring_ca.infrastructure.security.ImageOwner;
+import me.aco.marketplace_spring_ca.infrastructure.security.ImageOwnerByItem;
 
 @RestController
 @RequestMapping("/api/Image")
@@ -40,6 +42,7 @@ public class ImageController extends BaseController {
     }
 
     @PostMapping(value = "{itemId}", consumes = { "multipart/form-data" })
+    @ImageOwnerByItem
     public ResponseEntity<ImageDto> add(@PathVariable Long itemId, @RequestParam("file") MultipartFile file) {
         try {
             return created(addImageCommandHandler
@@ -50,11 +53,13 @@ public class ImageController extends BaseController {
     }
 
     @PostMapping("/front/{imageId}")
+    @ImageOwner
     public ResponseEntity<ImageDto> makeImageFront(@PathVariable Long imageId) {
         return ok(makeImangeFrontCommandHandler.handle(new MakeImageFrontCommand(imageId)));
     }
 
     @DeleteMapping("/{imageId}")
+    @ImageOwner
     public ResponseEntity<Void> delete(@PathVariable Long imageId) {
         deleteImageCommandHandler.handle(new DeleteImageCommand(imageId));
         return noContent(null);
