@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,10 +31,11 @@ import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCo
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommandHandler;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RevokeTokenCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.UpdateSelfCommandHandler;
+import me.aco.marketplace_spring_ca.application.usecases.user.query.GetUserByIdQueryHandler;
 import me.aco.marketplace_spring_ca.domain.entities.User;
 import me.aco.marketplace_spring_ca.domain.enums.UserRole;
 import me.aco.marketplace_spring_ca.infrastructure.security.JwtTokenService;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 @WebMvcTest(AuthController.class)
 class AuthControllerTest {
@@ -51,6 +53,10 @@ class AuthControllerTest {
     private RefreshTokenCommandHandler refreshTokenCommandHandler;
     @MockitoBean
     private RevokeTokenCommandHandler revokeTokenCommandHandler;
+    @MockitoBean
+    private UpdateSelfCommandHandler updateSelfCommandHandler;
+    @MockitoBean
+    private GetUserByIdQueryHandler getUserByIdQueryHandler;
 
     //these two are needed for security context
     @MockitoBean

@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import me.aco.marketplace_spring_ca.application.dto.TokenDto;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.LoginCommand;
 import me.aco.marketplace_spring_ca.application.usecases.auth.command.RegisterCommand;
-import me.aco.marketplace_spring_ca.application.usecases.user.command.UpdateUserCommand;
+import me.aco.marketplace_spring_ca.application.usecases.auth.command.UpdateSelfCommand;
 import me.aco.marketplace_spring_ca.domain.intefrace.PasswordHasher;
 import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository;
 
@@ -94,36 +94,34 @@ public class RegisterUpdateAndLogin {
         assertEquals(true, userOpt.isPresent(), "User should exist in repository after registration");
 
         // Step 4: Update user
-        UpdateUserCommand command = new UpdateUserCommand(
+        UpdateSelfCommand command = new UpdateSelfCommand(
                 userOpt.get().getId(),
                 username,
                 false,
                 "",
                 "Updated User",
                 updatedEmail,
-                "555-1111",
-                "ADMIN");
+                "555-1111");
 
         // Perform update
-        mockMvc.perform(post("/api/User/" + userOpt.get().getId())
+        mockMvc.perform(post("/api/Auth/update-self/" + userOpt.get().getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Authorization", jwtToken)
                 .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isOk());
 
         // Step 5: Change password
-        UpdateUserCommand updCommand = new UpdateUserCommand(
+        UpdateSelfCommand updCommand = new UpdateSelfCommand(
                 userOpt.get().getId(),
                 username,
                 true,
                 "updatedPassword123",
                 "Updated User",
                 updatedEmail,
-                "555-1111",
-                "ADMIN");
+                "555-1111");
 
         // Perform update
-        mockMvc.perform(post("/api/User/" + userOpt.get().getId())
+        mockMvc.perform(post("/api/Auth/update-self/" + userOpt.get().getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Authorization", jwtToken)
                 .content(objectMapper.writeValueAsString(updCommand)))
