@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
 import me.aco.marketplace_spring_ca.application.dto.TokenDto;
 import me.aco.marketplace_spring_ca.application.exceptions.AuthenticationException;
 import me.aco.marketplace_spring_ca.domain.entities.User;
@@ -15,6 +16,7 @@ import me.aco.marketplace_spring_ca.infrastructure.persistence.JpaUserRepository
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class LoginCommandHandler {
 
     private static final int REFRESH_TOKEN_VALIDITY_DAYS = 7;
@@ -23,14 +25,6 @@ public class LoginCommandHandler {
     private final RefreshTokenService refreshTokenService;
     private final TokenService tokenService;
     private final PasswordHasher passwordHasher;
-
-    public LoginCommandHandler(JpaUserRepository userRepository, RefreshTokenService refreshTokenService,
-            TokenService tokenService, PasswordHasher passwordHasher) {
-        this.userRepository = userRepository;
-        this.refreshTokenService = refreshTokenService;
-        this.tokenService = tokenService;
-        this.passwordHasher = passwordHasher;
-    }
 
     public TokenDto handle(LoginCommand command) {
 
