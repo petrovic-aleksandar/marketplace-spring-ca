@@ -2,11 +2,13 @@ package me.aco.marketplace_spring_ca.infrastructure.file;
 
 import java.io.*;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import me.aco.marketplace_spring_ca.domain.intefrace.FileStorageService;
 
 @Service
+@Profile("!azure")
 public class FileStorageServiceImpl implements FileStorageService {
     public void saveToFile(InputStream uploadedInputStream, String uploadedFileLocation) {
         File targetFile = new File("images/" + uploadedFileLocation);
