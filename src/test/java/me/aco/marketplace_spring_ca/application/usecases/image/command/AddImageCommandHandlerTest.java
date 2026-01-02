@@ -58,7 +58,7 @@ class AddImageCommandHandlerTest {
         ImageDto dto = handler.handle(command);
 
         // Assert
-        verify(fileStorageService).saveToFile(fileStream, fileName);
+        verify(fileStorageService).saveToFile(fileStream, itemId + "/" + fileName);
         verify(itemRepository).findById(itemId);
         verify(imageRepository).save(any(Image.class));
         assertEquals(savedImage.getId(), dto.id());
