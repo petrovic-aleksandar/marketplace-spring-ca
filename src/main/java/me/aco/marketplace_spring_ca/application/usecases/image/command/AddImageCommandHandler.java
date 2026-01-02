@@ -36,11 +36,11 @@ public class AddImageCommandHandler {
     }
 
     private void saveToFile(AddImageCommand command) {
-        fileStorageService.saveToFile(command.fileStream(), command.fileName());
+        fileStorageService.saveToFile(command.fileStream(), command.itemId() + "/" + command.fileName());
     }
 
     private Image saveImage(AddImageCommand command, Item item) {
-        var image = new me.aco.marketplace_spring_ca.domain.entities.Image();
+        var image = new Image();
         image.setPath(command.fileName());
         image.setItem(item);
         image.setFront(false);
