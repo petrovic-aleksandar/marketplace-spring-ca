@@ -20,7 +20,7 @@ public class CorsConfig {
         
         // Allowed origins - Angular frontend
         config.setAllowedOrigins(Arrays.asList(
-            "http://localhost:4200"
+            "https://happy-tree-0cb41e910.1.azurestaticapps.net"
         ));
         
         // Allowed HTTP methods
