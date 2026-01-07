@@ -18,6 +18,6 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('USER') and @transferOwnershipService.isUserIdOwner(#command?.userId(), authentication.principal)")
+@PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and @transferOwnershipService.isUserIdOwner(#command?.userId(), authentication.principal))")
 public @interface PaymentOwner {
 }

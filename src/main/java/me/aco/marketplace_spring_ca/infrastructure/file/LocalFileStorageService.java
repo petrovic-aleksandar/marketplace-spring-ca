@@ -9,7 +9,7 @@ import me.aco.marketplace_spring_ca.domain.intefrace.FileStorageService;
 
 @Service
 @Profile("!azure")
-public class FileStorageServiceImpl implements FileStorageService {
+public class LocalFileStorageService implements FileStorageService {
     public void saveToFile(InputStream uploadedInputStream, String uploadedFileLocation) {
         File targetFile = new File("images/" + uploadedFileLocation);
         File parentDir = targetFile.getParentFile();
